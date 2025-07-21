@@ -40,10 +40,34 @@ Incluye soporte para bangs de DuckDuckGo, edición de alias, historial, backup a
 
 ---
 
+## 🚀 Instalación
 
-> 📝 El script creará automáticamente el archivo `kwebsearch.conf` con todos los alias por defecto.
+```bash
+git clone https://github.com/dmnmsc/kwebsearch.git
+cd kwebsearch
+chmod +x kwebsearch.sh
+./kwebsearch.sh
+```
+ 📝 El script creará automáticamente el archivo `kwebsearch.conf` con todos los alias por defecto.
 
 ---
+## 💡 Sugerencia: Asigna un atajo de teclado
+
+Para invocar KWebSearch con mayor rapidez, se recomienda asignar un **atajo de teclado personalizado** que ejecute el script desde cualquier parte del sistema.
+
+### En KDE Plasma:
+
+1. Abre la app **Preferencias del sistema** → sección **Accesos rápidos**.
+2. Ve a **Accesos rápidos personalizados** → selecciona "Editar".
+3. Crea una nueva acción:
+   - **Nombre:** `KWebSearch`
+   - **Acción/Comando:** `/ruta/completa/a/kwebsearch.sh`
+   - **Acceso rápido:** elige una combinación libre, como `Meta + W` 🔁
+4. Guarda y prueba el acceso rápido.
+
+Esto convierte tu script en una herramienta instantánea, accesible desde cualquier ventana o escritorio, sin necesidad de abrir una terminal.
+
+> 🧠 También puedes vincularlo a un botón físico si usas dispositivos como StreamDeck, teclados programables o gestos en tu panel táctil.
 
 ## 🔧 Alias incluidos
 
@@ -95,4 +119,12 @@ Incluye soporte para bangs de DuckDuckGo, edición de alias, historial, backup a
   - `kwebsearch_backup_YYYY-MM-DD_HH-MM-SS/` → Carpeta de cada backup
 - `~/.kwebsearch_history` → Historial de consultas realizadas
 
+## 🛡️ Licencia
+
+Este proyecto está licenciado bajo la **GNU General Public License v3.0**
+
+Puedes ver el texto completo en [`LICENSE.md`](./LICENSE.md) o visitar el sitio oficial:  
+🔗 https://www.gnu.org/licenses/gpl-3.0.html
+
+> El código fuente, así como cualquier versión modificada o distribuida, debe mantenerse como código abierto bajo esta misma licencia.
 
