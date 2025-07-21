@@ -1,7 +1,7 @@
 # 📘 KWebSearch — Buscador gráfico personalizado para KDE
 
-**Versión:** v1.0 final  
-**Autor:** J.Pujó  
+**Versión:** v1.0 
+**Autor:** JP  
 **Licencia:** [GNU General Public License v3.0](https://www.gnu.org/licenses/gpl-3.0.html)  
 **Entorno recomendado:** KDE Plasma con kdialog  
 **Idioma:** Español
