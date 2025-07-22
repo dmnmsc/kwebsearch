@@ -105,8 +105,8 @@ Esto convierte tu script en una herramienta instantánea, accesible desde cualqu
 | `_clear`        | Borrar historial completo                |
 | `_default`      | Definir alias por defecto                |
 | `_resetalias`   | Restablecer alias por defecto a DuckDuckGo |
-| `_exportconfig` | Crear backup con historial incluido      |
-| `_importconfig` | Restaurar el último backup disponible    |
+| `_backup`       | Crear backup con historial incluido      |
+| `_restore`      | Restaurar backup                         |
 | `_help`         | Ver ayuda rápida                         |
 | `_exit`         | Salir del script                         |
 
