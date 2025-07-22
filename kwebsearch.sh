@@ -10,7 +10,7 @@ fi
 CONF="$HOME/kwebsearch/kwebsearch.conf"
 HIST="$HOME/.kwebsearch_history"
 BACKUP_DIR="$HOME/kwebsearch"
-mkdir -p "$HOME/kwebsearch"
+mkdir -p "$BACKUP_DIR"
 touch "$HIST"
 
 # 📝 Alias inicial
@@ -31,14 +31,15 @@ a)xdg-open "https://www.amazon.es/s?k=\$query";;#Amazon
 d)xdg-open "https://dle.rae.es/?w=\$query";;#RAE
 .d)xdg-open "https://www.wordreference.com/sinonimos/\$query";;#Sinónimos español
 c)xdg-open "https://dlc.iec.cat/results.asp?txtEntrada=\$query";;#DIEC
-.c)xdg-open "https://www.softcatala.org/diccionari-de-sinonims/paraula/\$query";;#Sinònims CAT
+.c)xdg-open "https://www.softcatala.org/diccionari-de-sinonims/paraula/\$query";;#Sinònims catalán
 e)xdg-open "https://www.wordreference.com/definition/\$query";;#Diccionario inglés
 .e)xdg-open "https://www.wordreference.com/synonyms/\$query";;#Sinónimos inglés
 aur)xdg-open "https://aur.archlinux.org/packages?K=\$query";;#AUR
 gh)xdg-open "https://github.com/search?q=\$query";;#GitHub
 trans)xdg-open "https://translate.google.com/?sl=auto&tl=es&text=\$query";;#Traductor
 EOF
-kdialog --msgbox "✅ Archivo de alias creado en:\n$CONF"
+
+  kdialog --msgbox "✅ Archivo de alias creado en:\n$CONF"
 fi
 
 # 🧠 Alias por defecto
@@ -65,8 +66,7 @@ mostrar_alias() {
     restablecer_alias
   else
     descripcion=$(grep -E "^$key\)" "$CONF" | sed -E 's/.*#(.*)$/\1/')
-    titulo=$(echo "$descripcion" | sed 's/^\s*//')
-    texto=$(kdialog --title "$titulo" --inputbox "Escribe tu consulta:")
+    texto=$(kdialog --title "$descripcion" --inputbox "Escribe tu consulta:")
     [[ -z "$texto" ]] && exit
     procesar_busqueda "$key:$texto"
   fi
@@ -105,7 +105,8 @@ restablecer_alias() {
   exit
 }
 
-exportar_config() {
+# backup_config(): antes exportar_config()
+backup_config() {
   TIMESTAMP=$(date +"%Y-%m-%d_%H-%M-%S")
   DEST="$BACKUP_DIR/kwebsearch_backup_$TIMESTAMP"
   mkdir -p "$DEST"
@@ -115,32 +116,46 @@ exportar_config() {
   exit
 }
 
-importar_config() {
-  LAST_BACKUP=$(ls -d "$BACKUP_DIR"/kwebsearch_backup_* 2>/dev/null | sort | tail -n1)
-  if [[ -z "$LAST_BACKUP" ]]; then
+# restore_config(): antes importar_config()
+restore_config() {
+  # Listar etiquetas de backups existentes
+  mapfile -t LABELS < <(
+    ls -1d "$BACKUP_DIR"/kwebsearch_backup_* 2>/dev/null \
+      | sort \
+      | sed -e 's#.*/kwebsearch_backup_##'
+  )
+
+  if (( ${#LABELS[@]} == 0 )); then
     kdialog --msgbox "❌ No se encontró ningún backup en $BACKUP_DIR"
     exit
   fi
-  cp "$LAST_BACKUP/kwebsearch.conf" "$CONF"
-  cp "$LAST_BACKUP/kwebsearch_history" "$HIST"
-  kdialog --msgbox "✅ Backup restaurado:\n$LAST_BACKUP"
-  bash "$0" &
-  exit
+
+  seleccion=$(kdialog --title "Importar backup" \
+    --combobox "Elige el backup a restaurar:" \
+    "${LABELS[@]}")
+  [[ -z "$seleccion" ]] && exit
+
+  backup_path="$BACKUP_DIR/kwebsearch_backup_$seleccion"
+  cp "$backup_path/kwebsearch.conf" "$CONF"
+  cp "$backup_path/kwebsearch_history" "$HIST"
+  kdialog --msgbox "✅ Backup restaurado:\n$backup_path"
+
+  exec bash "$0"
 }
 
 mostrar_ayuda() {
   kdialog --msgbox "🧾 Comandos especiales disponibles:
 
-_config        → Menú general
-_alias         → Selector de alias
-_edit          → Editar alias manualmente
-_clear         → Borrar historial
-_default       → Establecer alias por defecto
-_resetalias    → Restablecer alias por defecto (DuckDuckGo)
-_exportconfig  → Exportar configuración e historial
-_importconfig  → Restaurar último backup disponible
-_help          → Ver esta ayuda
-_exit          → Salir del script"
+_config    → Menú general
+_alias     → Selector de alias
+_edit      → Editar alias manualmente
+_clear     → Borrar historial
+_default   → Establecer alias por defecto
+_resetalias→ Restablecer alias por defecto (DuckDuckGo)
+_backup    → Crear backup (configuración e historial)
+_restore   → Restaurar backup existente
+_help      → Ver esta ayuda
+_exit      → Salir del script"
   bash "$0" &
   exit
 }
@@ -177,8 +192,8 @@ procesar_busqueda() {
   exit
 }
 
-# 🔀 Ejemplo dinámico
-EJEMPLOS_BANG=("!w energía solar" "!gh ffmpeg" "!aur neovim" "!yt rammstein" "!g teclado mecánico")
+# 🌟 Ejemplo dinámico de bangs
+EJEMPLOS_BANG=("!w energía solar" "!gh kwebsearch" "!aur neovim" "!yt rammstein" "!g teclado mecánico")
 BANG_EJEMPLO=${EJEMPLOS_BANG[$RANDOM % ${#EJEMPLOS_BANG[@]}]}
 
 # 🏷️ Título según alias por defecto
@@ -186,7 +201,7 @@ if [[ -n "$DEFAULT_ALIAS" ]]; then
   line=$(grep -E "^$DEFAULT_ALIAS\)" "$CONF")
   titulo=$(echo "$line" | sed -E 's/^.*#\s*(.*)$/\1/')
 else
-  titulo="Buscador Web"
+  titulo="KWebSearch"
 fi
 
 # 💬 Entrada principal
@@ -194,17 +209,16 @@ input=$(kdialog --title "$titulo" --inputbox \
 "🟢 Usa !bangs de DuckDuckGo. Ejemplo: $BANG_EJEMPLO  ✏️ Escribe _help para ver más opciones:")
 [[ $? -ne 0 || -z "$input" ]] && exit
 
-# 🎯 Comandos
+# 🎯 Comandos y menú
 case "$input" in
-  _help) mostrar_ayuda ;;
-  _alias) mostrar_alias ;;
-  _edit) editar_alias ;;
-  _clear) borrar_historial ;;
-  _default) establecer_default ;;
-  _resetalias) restablecer_alias ;;
-  _exportconfig) exportar_config ;;
-  _importconfig) importar_config ;;
-  _exit) exit ;;
+  _help)        mostrar_ayuda ;;
+  _alias)       mostrar_alias ;;
+  _edit)        editar_alias ;;
+  _clear)       borrar_historial ;;
+  _default)     establecer_default ;;
+  _resetalias)  restablecer_alias ;;
+  _backup)      backup_config ;;
+  _restore)     restore_config ;;
   _config)
     OPCION=$(kdialog --title "Opciones" --menu "¿Qué deseas hacer?" \
       1 "📘 Selector de alias" \
@@ -214,18 +228,18 @@ case "$input" in
       5 "📖 Ver ayuda" \
       6 "❌ Salir" \
       7 "🔄 Restablecer alias por defecto (DuckDuckGo)" \
-      8 "📤 Exportar configuración con historial" \
-      9 "📥 Importar último backup")
+      8 "📤 Crear backup (configuración e historial)" \
+      9 "📥 Restaurar backup existente")
     case "$OPCION" in
-      1) mostrar_alias ;;
-      2) editar_alias ;;
-      3) borrar_historial ;;
+      1) mostrar_alias   ;;
+      2) editar_alias    ;;
+      3) borrar_historial;;
       4) establecer_default ;;
-      5) mostrar_ayuda ;;
-      6|"") exit ;;
+      5) mostrar_ayuda   ;;
+      6|"") exit         ;;
       7) restablecer_alias ;;
-      8) exportar_config ;;
-      9) importar_config ;;
+      8) backup_config   ;;
+      9) restore_config  ;;
     esac
     ;;
   *) procesar_busqueda "$input" ;;
