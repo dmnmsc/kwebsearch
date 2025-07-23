@@ -12,7 +12,7 @@
 
 KWebSearch es un script Bash con interfaz visual en `kdialog` que te permite realizar búsquedas web rápidas usando alias personalizables. Está diseñado para usuarios KDE que buscan un acceso instantáneo a servicios online como Google, Wikipedia, YouTube, GitHub, AUR, diccionarios y muchos más, todo desde su escritorio.
 
-Incluye soporte para bangs de DuckDuckGo, creación de alias nuevos desde interfaz gráfica, historial, backup automático y restauración gráfica.
+Incluye soporte para bangs de DuckDuckGo, creación de alias nuevos desde interfaz gráfica, historial con selector visual, backup automático y restauración gráfica.
 
 ---
 
@@ -21,7 +21,8 @@ Incluye soporte para bangs de DuckDuckGo, creación de alias nuevos desde interf
 - 🔎 Alias personalizados para búsquedas específicas, ahora también se pueden crear alias nuevos desde la interfaz  
 - 🧠 Alias por defecto configurable  
 - 📘 Menú visual interactivo (`_config`)  
-- ✏️ Edición rápida del archivo de alias  
+- ✏️ Edición rápida del archivo de alias
+- 🕘 Visualización del historial reciente con selección interactiva
 - 🧹 Limpieza de historial desde interfaz  
 - 📤 Exportación de configuración e historial con fecha  
 - 📥 Restauración del último backup disponible  
@@ -93,18 +94,19 @@ Esto convierte tu script en una herramienta instantánea, accesible desde cualqu
 ## 🛠️ Comandos especiales
 
 | Comando         | Función                                  |
-|-----------------|-----------------------------------------|
-| `_config`       | Menú principal con todas las opciones   |
+|-----------------|------------------------------------------|
+| `_config`       | Menú principal con todas las opciones    |
 | `_alias`        | Selector de alias visual                 |
-| `_newalias`     | Crear un alias nuevo desde interfaz     |
-| `_edit`         | Editar el archivo de alias manualmente  |
-| `_clear`        | Borrar historial completo                |
+| `_newalias`     | Crear un alias nuevo desde interfaz      |
+| `_edit`         | Editar el archivo de alias manualmente   |
 | `_default`      | Definir alias por defecto                |
 | `_resetalias`   | Restablecer alias por defecto a DuckDuckGo |
-| `_backup`       | Crear backup con historial incluido     |
+| `_history`      | Ver historial reciente de búsquedas      |
+| `_clear`        | Borrar historial completo                |
+| `_backup`       | Crear backup con historial incluido      |
 | `_restore`      | Restaurar backup                         |
 | `_help`         | Ver ayuda rápida                         |
-| `_exit`         | Salir del script                        |
+| `_exit`         | Salir del script                         |
 
 ---
 
