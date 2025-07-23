@@ -46,6 +46,19 @@ fi
 DEFAULT_ALIAS=$(grep -E '^default_alias=' "$CONF" | cut -d= -f2 | tr -d '"')
 
   # 🔧 Funciones
+ver_historial() {
+  if [[ ! -s "$HIST" ]]; then
+    kdialog --msgbox "ℹ️ No hay historial disponible todavía."
+    exit
+  fi
+
+  mapfile -t ITEMS < <(tac "$HIST")
+  sel=$(kdialog --title "🕘 Historial de búsquedas" \
+    --combobox "Selecciona una búsqueda anterior:" "${ITEMS[@]}") || exit
+
+  [[ -n "$sel" ]] && procesar_busqueda "$sel"
+}
+
 crear_alias() {
   local key="" desc="" tmpl=""
 
@@ -287,6 +300,7 @@ mostrar_ayuda() {
    _resetalias → Restablecer alias por defecto
 
 🗄️  HISTORIAL
+   _history      → Ver historial reciente
    _clear          → Borrar historial
 
 💾  CONFIGURACIÓN & BACKUP
@@ -358,6 +372,7 @@ case "$input" in
   _edit)        editar_alias ;;
   _clear)       borrar_historial ;;
   _default)     establecer_default ;;
+  _history)     ver_historial ;;
   _resetalias)  restablecer_alias ;;
   _newalias)  crear_alias ;;
   _backup)      backup_config ;;
@@ -369,22 +384,24 @@ case "$input" in
     3 "✏️ Editar alias" \
     4 "🟢 Establecer alias por defecto" \
     5 "🔄 Restablecer alias por defecto" \
-    6 "🧹 Limpiar historial" \
-    7 "📤 Crear backup (configuración e historial)" \
-    8 "📥 Restaurar backup existente" \
-    9 "📖 Ver ayuda" \
-    10 "❌ Salir")
+    6 "🕘 Ver historial" \
+    7 "🧹 Limpiar historial" \
+    8 "📤 Crear backup (configuración e historial)" \
+    9 "📥 Restaurar backup existente" \
+    10 "📖 Ver ayuda" \
+    11 "❌ Salir")
   case "$OPCION" in
     1) mostrar_alias      ;;
     2) crear_alias        ;;
     3) editar_alias       ;;
     4) establecer_default ;;
     5) restablecer_alias  ;;
-    6) borrar_historial   ;;
-    7) backup_config      ;;
-    8) restore_config     ;;
-    9) mostrar_ayuda      ;;
-    10) exit              ;;
+    6) ver_historial  ;;
+    7)borrar_historial   ;;
+    8) backup_config      ;;
+    9) restore_config     ;;
+    10) mostrar_ayuda      ;;
+    11) exit              ;;
   esac
   ;;
 
