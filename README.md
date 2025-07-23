@@ -67,6 +67,9 @@ Esto convierte tu script en una herramienta instantánea, accesible desde cualqu
 
 ## 🔧 Alias incluidos
 
+Al iniciar `kwebsearch.sh` por primera vez, se crea un archivo de configuración (`kwebsearch.conf`) con una selección de alias listos para búsquedas rápidas en servicios populares.  
+Cada alias es un identificador corto que puedes escribir antes de tu búsqueda para dirigir la consulta al sitio correspondiente.
+
 | Alias | Servicio             | Descripción              |
 |-------|----------------------|--------------------------|
 | g     | Google               | Búsqueda clásica         |
@@ -89,6 +92,29 @@ Esto convierte tu script en una herramienta instantánea, accesible desde cualqu
 | gh    | GitHub               | Repositorios             |
 | trans | Google Translate     | Traducción automática    |
 
+> **ℹ️ Puedes consultar la lista completa de alias con el comando especial `_alias` o revisando el archivo `kwebsearch.conf`.**
+> 
+## ⚙️ Personalización avanzada de alias
+
+Puedes adaptar `kwebsearch.sh` a tus necesidades agregando, modificando o eliminando alias **desde la interfaz gráfica** del propio script, sin editar archivos manualmente.  
+Cada alias tiene tres componentes: **nombre**, **descripción** y **URL de búsqueda** (donde `$query` será reemplazado por lo que busques).
+
+### ➕ ¿Cómo crear o editar alias?
+
+1. **Usa el comando especial:**  
+   Escribe `_newalias` para crear uno nuevo, o `_edit` para modificar uno existente, desde la ventana de búsqueda.
+
+2. **Completa los campos en el diálogo gráfico:**  
+   - **Alias**: palabra corta (ejemplo: `eco`)
+   - **Descripción**: indica a qué sitio corresponde (`Ecosia`)
+   - **URL**: dirección de búsqueda, usando `$query` como marcador  
+     Ejemplo para Ecosia:  
+     ```
+     https://www.ecosia.org/search?q=$query
+     ```
+
+3. **Guarda y prueba el nuevo alias:**  
+   Por ejemplo, si creaste un alias `eco` para Ecosia, escribe `eco:github` en la ventana principal.
 ---
 
 ## 🛠️ Comandos especiales
