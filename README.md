@@ -68,6 +68,7 @@ Esto convierte tu script en una herramienta instantánea, accesible desde cualqu
 ## 🔧 Alias incluidos
 
 Al iniciar `kwebsearch.sh` por primera vez, se crea un archivo de configuración (`kwebsearch.conf`) con una selección de alias listos para búsquedas rápidas en servicios populares.  
+
 Cada alias es un identificador corto que puedes escribir antes de tu búsqueda para dirigir la consulta al sitio correspondiente.
 
 | Alias | Servicio             | Descripción              |
@@ -97,6 +98,7 @@ Cada alias es un identificador corto que puedes escribir antes de tu búsqueda p
 ## ⚙️ Personalización avanzada de alias
 
 Puedes adaptar `kwebsearch.sh` a tus necesidades agregando, modificando o eliminando alias **desde la interfaz gráfica** del propio script, sin editar archivos manualmente.  
+
 Cada alias tiene tres componentes: **nombre**, **descripción** y **URL de búsqueda** (donde `$query` será reemplazado por lo que busques).
 
 ### ➕ ¿Cómo crear o editar alias?
