@@ -45,31 +45,130 @@ fi
 # 🧠 Alias por defecto
 DEFAULT_ALIAS=$(grep -E '^default_alias=' "$CONF" | cut -d= -f2 | tr -d '"')
 
-# 🔧 Funciones
+  # 🔧 Funciones
+crear_alias() {
+  local key="" desc="" tmpl=""
+
+  # 1) Clave del alias
+  while true; do
+    key=$(kdialog --inputbox "🔑 Clave del alias (sin espacios ni paréntesis):" "$key") || return
+    key="${key//[^a-zA-Z0-9_.@,+-]/}"
+
+    if [[ -z "$key" ]]; then
+      kdialog --error "❌ La clave está vacía o contiene caracteres no permitidos."
+      continue
+    fi
+
+    if grep -qE "^${key}\)" "$CONF"; then
+      kdialog --error "❌ La clave '$key' ya existe en el archivo de alias."
+      continue
+    fi
+    break
+  done
+
+  # 2) Descripción del alias
+  while true; do
+    desc=$(kdialog --inputbox "📘 Descripción para '$key':" "$desc") || return
+
+    if [[ -z "$desc" ]]; then
+      kdialog --error "❌ La descripción no puede estar vacía."
+      continue
+    fi
+    break
+  done
+
+  # 3) Plantilla de comando
+  while true; do
+    tmpl=$(kdialog --inputbox \
+      "⚙️ Comando con \$query:\nEjemplo: xdg-open \"https://ejemplo.com?q=\$query\"" "$tmpl") || return
+
+    if [[ -z "$tmpl" ]]; then
+      kdialog --error "❌ La plantilla no puede estar vacía."
+      continue
+    fi
+
+    if ! grep -q "\$query" <<< "$tmpl"; then
+      kdialog --error "❌ Falta el placeholder \$query en el comando."
+      continue
+    fi
+
+    local quote_count=$(grep -o '"' <<< "$tmpl" | wc -l)
+    if (( quote_count % 2 != 0 )); then
+      kdialog --error "❌ Las comillas dobles están desbalanceadas. Deben ir en pares."
+      continue
+    fi
+
+    if ! grep -q '"[^"]*\$query[^"]*"' <<< "$tmpl"; then
+      kdialog --error "❌ El placeholder \$query debe estar dentro de comillas dobles correctamente cerradas."
+      continue
+    fi
+
+    break
+  done
+
+  # 4) Confirmación final
+  if kdialog --yesno "🔍 Vista previa:\n\n${key}) ${tmpl} ;;#${desc}\n\n¿Guardar este alias?"; then
+    printf '%s)%s;;#%s\n' "$key" "$tmpl" "$desc" >> "$CONF"
+    kdialog --msgbox "✅ Alias guardado correctamente: $key"
+  else
+    kdialog --msgbox "❌ Alias cancelado. No se ha guardado."
+  fi
+
+  exec bash "$0"
+}
+
 mostrar_alias() {
-  OPCIONES=()
-  while read -r line; do
+  local keys=() descs=() options=() sel key desc query
+
+  # 0) Opción DuckDuckGo (alias vacío)
+  keys+=("")
+  descs+=("DuckDuckGo")
+  if [[ -z "$DEFAULT_ALIAS" ]]; then
+    options+=( "DuckDuckGo 🟢 (predeterminado)" )
+  else
+    options+=( "DuckDuckGo (predeterminado)" )
+  fi
+
+  # 1) Leer CONF y rellenar arrays con tus alias habituales
+  while IFS= read -r line; do
     [[ "$line" =~ ^([a-zA-Z0-9_.@,+-]*)\)[^#]*#[[:space:]]*(.*)$ ]] || continue
-    alias="${BASH_REMATCH[1]}"
-    descripcion="${BASH_REMATCH[2]}"
-    [[ "$alias" == "$DEFAULT_ALIAS" ]] && descripcion="${descripcion} 🟢 (por defecto)"
-    OPCIONES+=("$alias:$descripcion")
+    key="${BASH_REMATCH[1]}"
+    desc="${BASH_REMATCH[2]}"
+    [[ "$key" == "$DEFAULT_ALIAS" ]] && desc+=" 🟢 (por defecto)"
+    keys+=("$key")
+    descs+=("$desc")
+    options+=( "${desc} (${key})" )
   done < "$CONF"
 
-  OPCIONES+=("reset:🧹 Restablecer alias por defecto (DuckDuckGo)")
+  # 2) Mostrar combobox SIN reset
+  sel=$(kdialog \
+    --title "Alias disponibles" \
+    --combobox "Selecciona un alias:" \
+    "${options[@]}" ) || exit
+  [[ -z "$sel" ]] && exit
 
-  alias_seleccionado=$(kdialog --title "Alias disponibles" --combobox "Selecciona un alias:" "${OPCIONES[@]}")
-  [[ -z "$alias_seleccionado" ]] && exit
-  key="${alias_seleccionado%%:*}"
+  # 3) Encontrar índice para recuperar key y desc
+  for i in "${!options[@]}"; do
+    [[ "${options[i]}" == "$sel" ]] && key="${keys[i]}" desc="${descs[i]}" && break
+  done
 
-  if [[ "$key" == "reset" ]]; then
-    restablecer_alias
-  else
-    descripcion=$(grep -E "^$key\)" "$CONF" | sed -E 's/.*#(.*)$/\1/')
-    texto=$(kdialog --title "$descripcion" --inputbox "Escribe tu consulta:")
-    [[ -z "$texto" ]] && exit
-    procesar_busqueda "$key:$texto"
+  # 4) Si el alias elegido es vacío → DuckDuckGo directo
+  if [[ -z "$key" ]]; then
+    query=$(kdialog \
+      --title "DuckDuckGo" \
+      --inputbox "Escribe tu consulta:") || exit
+    [[ -z "$query" ]] && exit
+    xdg-open "https://duckduckgo.com/?q=$(echo "$query" | sed 's/ /+/g')"
+    exit
   fi
+
+  # 5) Para cualquier otro alias, pedimos su consulta habitual
+  query=$(kdialog \
+    --title "$desc" \
+    --inputbox "Escribe tu consulta:") || exit
+  [[ -z "$query" ]] && exit
+
+  procesar_busqueda "$key:$query"
 }
 
 editar_alias() {
@@ -84,20 +183,54 @@ borrar_historial() {
 }
 
 establecer_default() {
-  OPCIONES=()
-  while read -r line; do
-    [[ "$line" =~ ^([a-zA-Z0-9_.@,+-]*)\)[^#]*#[[:space:]]*(.*)$ ]] || continue
-    alias="${BASH_REMATCH[1]}"
-    descripcion="${BASH_REMATCH[2]}"
-    OPCIONES+=("$alias:$descripcion")
-  done < "$CONF"
-  alias_default=$(kdialog --title "Alias por defecto" --combobox "Selecciona un alias por defecto:" "${OPCIONES[@]}")
-  [[ -z "$alias_default" ]] && exit
-  new_default="${alias_default%%:*}"
-  sed -i "s/^default_alias=.*/default_alias=\"$new_default\"/" "$CONF"
-  kdialog --msgbox "✅ Alias por defecto actualizado: ${new_default:-DuckDuckGo}"
-  exit
-}
+    local keys=() descs=() options=() sel key desc new_default
+
+    # 1) Leer CONF y rellenar arrays
+    while IFS= read -r line; do
+      [[ "$line" =~ ^([a-zA-Z0-9_.@,+-]*)\)[^#]*#[[:space:]]*(.*)$ ]] || continue
+      key="${BASH_REMATCH[1]}"
+      desc="${BASH_REMATCH[2]}"
+      # Marcar el actual default
+      [[ "$key" == "$DEFAULT_ALIAS" ]] && desc+=" 🟢 (actual)"
+      keys+=("$key")
+      descs+=("$desc")
+      options+=( "${desc} (${key})" )
+    done < "$CONF"
+
+    # 2) Añadir opción reset
+    keys+=("reset")
+    descs+=("🧹 Restablecer alias por defecto (DuckDuckGo)")
+    options+=( "🧹 Restablecer alias por defecto (reset)" )
+
+    # 3) Mostrar combobox
+    sel=$(kdialog \
+      --title "Alias por defecto" \
+      --combobox "Selecciona un alias por defecto:" \
+      "${options[@]}" ) || exit
+    [[ -z "$sel" ]] && exit
+
+    # 4) Encontrar índice de la selección
+    for i in "${!options[@]}"; do
+      if [[ "${options[i]}" == "$sel" ]]; then
+        key="${keys[i]}"
+        desc="${descs[i]}"
+        break
+      fi
+    done
+
+    # 5) Si reset, llamar a restablecer_alias
+    if [[ "$key" == "reset" ]]; then
+      restablecer_alias
+      exit
+    fi
+
+    # 6) Actualizar default_alias en el CONF
+    new_default="$key"
+    sed -i "s/^default_alias=.*/default_alias=\"$new_default\"/" "$CONF"
+    kdialog --msgbox "✅ Alias por defecto actualizado: $desc"
+
+    exit
+  }
 
 restablecer_alias() {
   sed -i 's/^default_alias=.*/default_alias=""/' "$CONF"
@@ -105,7 +238,7 @@ restablecer_alias() {
   exit
 }
 
-# backup_config(): antes exportar_config()
+# backup_config
 backup_config() {
   TIMESTAMP=$(date +"%Y-%m-%d_%H-%M-%S")
   DEST="$BACKUP_DIR/kwebsearch_backup_$TIMESTAMP"
@@ -116,7 +249,7 @@ backup_config() {
   exit
 }
 
-# restore_config(): antes importar_config()
+# restore_config
 restore_config() {
   # Listar etiquetas de backups existentes
   mapfile -t LABELS < <(
@@ -144,18 +277,27 @@ restore_config() {
 }
 
 mostrar_ayuda() {
-  kdialog --msgbox "🧾 Comandos especiales disponibles:
+  kdialog --msgbox "🧾 Comandos disponibles
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📝  ALIAS
+   _alias         → Seleccionar alias
+   _newalias  → Crear alias
+   _edit           → Editar alias manualmente
+   _default     → Establecer alias por defecto
+   _resetalias → Restablecer alias por defecto
 
-_config    → Menú general
-_alias     → Selector de alias
-_edit      → Editar alias manualmente
-_clear     → Borrar historial
-_default   → Establecer alias por defecto
-_resetalias→ Restablecer alias por defecto (DuckDuckGo)
-_backup    → Crear backup (configuración e historial)
-_restore   → Restaurar backup existente
-_help      → Ver esta ayuda
-_exit      → Salir del script"
+🗄️  HISTORIAL
+   _clear          → Borrar historial
+
+💾  CONFIGURACIÓN & BACKUP
+   _config       → Menú general
+   _backup     → Crear backup (configuración e historial)
+   _restore     → Restaurar backup existente
+
+ℹ️  VARIOS
+   _help          → Ver esta ayuda
+   _exit           → Salir del script
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
   bash "$0" &
   exit
 }
@@ -217,30 +359,34 @@ case "$input" in
   _clear)       borrar_historial ;;
   _default)     establecer_default ;;
   _resetalias)  restablecer_alias ;;
+  _newalias)  crear_alias ;;
   _backup)      backup_config ;;
   _restore)     restore_config ;;
   _config)
-    OPCION=$(kdialog --title "Opciones" --menu "¿Qué deseas hacer?" \
-      1 "📘 Selector de alias" \
-      2 "✏️ Editar alias" \
-      3 "🧹 Limpiar historial" \
-      4 "🟢 Establecer alias por defecto" \
-      5 "📖 Ver ayuda" \
-      6 "❌ Salir" \
-      7 "🔄 Restablecer alias por defecto (DuckDuckGo)" \
-      8 "📤 Crear backup (configuración e historial)" \
-      9 "📥 Restaurar backup existente")
-    case "$OPCION" in
-      1) mostrar_alias   ;;
-      2) editar_alias    ;;
-      3) borrar_historial;;
-      4) establecer_default ;;
-      5) mostrar_ayuda   ;;
-      6|"") exit         ;;
-      7) restablecer_alias ;;
-      8) backup_config   ;;
-      9) restore_config  ;;
-    esac
-    ;;
+  OPCION=$(kdialog --title "Opciones" --menu "¿Qué deseas hacer?" \
+    1 "📘 Seleccionar alias" \
+    2 "🆕 Crear alias" \
+    3 "✏️ Editar alias" \
+    4 "🟢 Establecer alias por defecto" \
+    5 "🔄 Restablecer alias por defecto" \
+    6 "🧹 Limpiar historial" \
+    7 "📤 Crear backup (configuración e historial)" \
+    8 "📥 Restaurar backup existente" \
+    9 "📖 Ver ayuda" \
+    10 "❌ Salir")
+  case "$OPCION" in
+    1) mostrar_alias      ;;
+    2) crear_alias        ;;
+    3) editar_alias       ;;
+    4) establecer_default ;;
+    5) restablecer_alias  ;;
+    6) borrar_historial   ;;
+    7) backup_config      ;;
+    8) restore_config     ;;
+    9) mostrar_ayuda      ;;
+    10) exit              ;;
+  esac
+  ;;
+
   *) procesar_busqueda "$input" ;;
 esac
