@@ -71,27 +71,28 @@ Al iniciar `kwebsearch.sh` por primera vez, se crea un archivo de configuración
 
 Cada alias es un identificador corto que puedes escribir antes de tu búsqueda para dirigir la consulta al sitio correspondiente.
 
-| Alias | Servicio             | Descripción              |
-|-------|----------------------|--------------------------|
-| g     | Google               | Búsqueda clásica         |
-| .g    | Google Shopping      | Productos                |
-| i     | Google Imágenes      | Búsqueda visual          |
-| y     | YouTube (PWA)        | Vídeos                   |
-| w     | Wikipedia (ES)       | Español                  |
-| .w    | Wikipedia (EN)       | Inglés                   |
-| k     | Kimovil              | Comparar móviles         |
-| .k    | GSMArena             | Fichas técnicas          |
-| a     | Amazon               | Productos en España      |
-| .a    | Amazon (Incógnito)   | Navegador Chromium       |
-| d     | RAE                  | Diccionario español      |
-| .d    | WordReference        | Sinónimos en español     |
-| c     | DIEC (IEC)           | Diccionario catalán      |
-| .c    | SoftCatalà           | Sinónimos en catalán     |
-| e     | WordReference (EN)   | Definiciones inglés      |
-| .e    | WordReference        | Sinónimos inglés         |
-| aur   | AUR (Arch Linux)     | Paquetes comunitarios    |
-| gh    | GitHub               | Repositorios             |
-| trans | Google Translate     | Traducción automática    |
+| Alias | Servicio             | Descripción              | Ejemplo de uso                   |
+|-------|----------------------|--------------------------|-----------------------------------|
+| g     | Google               | Búsqueda clásica         | `g:inteligencia artificial`       |
+| .g    | Google Shopping      | Productos                | `.g:smartwatch deporte`           |
+| i     | Google Imágenes      | Búsqueda visual          | `i:noche estrellada`              |
+| y     | YouTube (PWA)        | Vídeos                   | `y:linux tutorial español`        |
+| w     | Wikipedia (ES)       | Español                  | `w:teoría cuántica`               |
+| .w    | Wikipedia (EN)       | Inglés                   | `.w:quantum theory`               |
+| k     | Kimovil              | Comparar móviles         | `k:xiaomi redmi note 12`          |
+| .k    | GSMArena             | Fichas técnicas          | `.k:samsung galaxy s23 ultra`     |
+| a     | Amazon               | Productos en España      | `a:disco duro ssd externo`        |
+| .a    | Amazon (Incógnito)   | Navegador Chromium       | `.a:raspberry pi 5`               |
+| d     | RAE                  | Diccionario español      | `d:resiliencia`                   |
+| .d    | WordReference        | Sinónimos en español     | `.d:rápido`                       |
+| c     | DIEC (IEC)           | Diccionario catalán      | `c:llibertat`                     |
+| .c    | SoftCatalà           | Sinónimos en catalán     | `.c:bonic`                        |
+| e     | WordReference (EN)   | Definiciones inglés      | `e:tired`                         |
+| .e    | WordReference        | Sinónimos inglés         | `.e:fast`                         |
+| aur   | AUR (Arch Linux)     | Paquetes comunitarios    | `aur:kdialog`                     |
+| gh    | GitHub               | Repositorios             | `gh:mpv`                          |
+| trans | Google Translate     | Traducción automática    | `trans:I won't give up`           |
+
 
 > **ℹ️ Puedes consultar la lista completa de alias con el comando especial `_alias` o revisando el archivo `kwebsearch.conf`.**
 > 
@@ -104,19 +105,20 @@ Cada alias tiene tres componentes: **nombre**, **descripción** y **URL de búsq
 ### ➕ ¿Cómo crear o editar alias?
 
 1. **Usa el comando especial:**  
-   Escribe `_newalias` para crear uno nuevo, o `_edit` para modificar uno existente, desde la ventana de búsqueda.
+   Escribe `_newalias` para crear uno nuevo, o `_edit` para modificar uno existente.
 
 2. **Completa los campos en el diálogo gráfico:**  
    - **Alias**: palabra corta (ejemplo: `eco`)
    - **Descripción**: indica a qué sitio corresponde (`Ecosia`)
    - **URL**: dirección de búsqueda, usando `$query` como marcador  
+
      Ejemplo para Ecosia:  
      ```
      https://www.ecosia.org/search?q=$query
      ```
 
 3. **Guarda y prueba el nuevo alias:**  
-   Por ejemplo, si creaste un alias `eco` para Ecosia, escribe `eco:github` en la ventana principal.
+   Escribe `eco:github` en la ventana principal.
 ---
 
 ## 🛠️ Comandos especiales
