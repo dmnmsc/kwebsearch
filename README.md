@@ -1,6 +1,6 @@
 # 📘 KWebSearch — Buscador gráfico personalizado para KDE
 
-**Versión:** v1.1  
+**Versión:** 1.2  
 **Autor:** dmnmsc  
 **Licencia:** [GNU General Public License v3.0](https://www.gnu.org/licenses/gpl-3.0.html)  
 **Entorno recomendado:** KDE Plasma con kdialog  
@@ -12,24 +12,24 @@
 
 KWebSearch es un script Bash con interfaz visual en `kdialog` que te permite realizar búsquedas web rápidas usando alias personalizables. Está diseñado para usuarios KDE que buscan un acceso instantáneo a servicios online como Google, Wikipedia, YouTube, GitHub, AUR, diccionarios y muchos más, todo desde su escritorio.
 
-Incluye soporte para bangs de DuckDuckGo, creación de alias nuevos desde interfaz gráfica, historial con selector visual, backup automático y restauración gráfica.
+Incluye soporte para bangs de DuckDuckGo, creación de alias nuevos desde interfaz gráfica, historial con selector visual, backups organizados por fecha, restauración gráfica, y una ayuda integrada.
 
 ---
 
 ## ⚙️ Características
 
-- 🔎 Alias personalizados para búsquedas específicas, ahora también se pueden crear alias nuevos desde la interfaz  
-- 🧠 Alias por defecto configurable  
-- 📘 Menú visual interactivo (`_config`)  
-- ✏️ Edición rápida del archivo de alias
-- 🕘 Visualización del historial reciente con selección interactiva
-- 🧹 Limpieza de historial desde interfaz  
-- 📤 Exportación de configuración e historial con fecha  
-- 📥 Restauración del último backup disponible  
-- 🔄 Reset de alias por defecto a DuckDuckGo  
-- 🆕 Creación de alias nuevos con `_newalias` desde interfaz gráfica  
-- 🧾 Ayuda integrada accesible con `_help`  
-- 🌐 Compatible con bangs de DuckDuckGo
+- 🔎 Alias personalizados para búsquedas específicas, con interfaz para crearlos fácilmente
+- 🧠 Alias por defecto configurable o reseteable (a DuckDuckGo)
+- 🔄 **Menú visual principal (`_menu`) con todas las funciones**
+- ✏️ Edición rápida del archivo de alias desde el script
+- 🕘 Visualización del historial con selección interactiva
+- 🧹 Limpieza de historial desde la interfaz
+- 📤 Exportación de configuración e historial con fecha única
+- 📥 Restauración de backups guardados desde selector gráfico
+- 🆕 Comando `_newalias` para añadir alias sin tocar archivos
+- 🧾 Ayuda rápida con `_help`
+- 🧠 **Nuevo comando `_about` para ver información de versión**
+- 🌐 Compatible con bangs de DuckDuckGo (`!g`, `!yt`, `!aur`, etc.)
 
 ---
 
@@ -123,20 +123,21 @@ Cada alias tiene tres componentes: **nombre**, **descripción** y **URL de búsq
 
 ## 🛠️ Comandos especiales
 
-| Comando         | Función                                  |
-|-----------------|------------------------------------------|
-| `_config`       | Menú principal con todas las opciones    |
-| `_alias`        | Selector de alias visual                 |
-| `_newalias`     | Crear un alias nuevo desde interfaz      |
-| `_edit`         | Editar el archivo de alias manualmente   |
-| `_default`      | Definir alias por defecto                |
-| `_resetalias`   | Restablecer alias por defecto a DuckDuckGo |
-| `_history`      | Ver historial reciente de búsquedas      |
-| `_clear`        | Borrar historial completo                |
-| `_backup`       | Crear backup con historial incluido      |
-| `_restore`      | Restaurar backup                         |
-| `_help`         | Ver ayuda rápida                         |
-| `_exit`         | Salir del script                         |
+| Comando         | Función                                      |
+|-----------------|----------------------------------------------|
+| `_menu` 🔄      | **Nuevo nombre del menú principal**          |
+| `_alias`        | Selector visual de alias                     |
+| `_newalias`     | Crear alias desde interfaz                   |
+| `_edit`         | Editar alias manualmente                     |
+| `_default`      | Establecer alias por defecto                 |
+| `_resetalias`   | Restablecer alias por defecto a DuckDuckGo  |
+| `_history`      | Ver historial de búsquedas                   |
+| `_clear`        | Borrar historial completo                    |
+| `_backup`       | Crear copia de seguridad                     |
+| `_restore`      | Restaurar una copia anterior                 |
+| `_help`         | Mostrar ayuda integrada                      |
+| `_about` 🆕     | Ver información de versión y autoría         |
+| `_exit`         | Salir del script                             |
 
 ---
 
@@ -144,7 +145,7 @@ Cada alias tiene tres componentes: **nombre**, **descripción** y **URL de búsq
 
 - `~/kwebsearch/`  
   - `kwebsearch.conf` → Archivo principal de alias  
-  - `kwebsearch_backup_YYYY-MM-DD_HH-MM-SS/` → Carpeta de cada backup  
+  - `kwebsearch_backup_YYYY-MM-DD_HH-MM-SS/` → Copias de seguridad  
 - `~/.kwebsearch_history` → Historial de consultas realizadas
 
 ---
