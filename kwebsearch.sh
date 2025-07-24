@@ -1,4 +1,5 @@
 #!/bin/bash
+VERSION="1.2"
 
 # ✅ Comprobar si kdialog está instalado
 if ! command -v kdialog &> /dev/null; then
@@ -46,6 +47,34 @@ fi
 DEFAULT_ALIAS=$(grep -E '^default_alias=' "$CONF" | cut -d= -f2 | tr -d '"')
 
   # 🔧 Funciones
+about_info() {
+  kdialog --title "Acerca de kwebsearch" --msgbox "
+Herramienta personal para realizar búsquedas web mediante alias personalizados.
+
+📦 FUNCIONES PRINCIPALES:
+• Configuración rápida mediante alias
+• Historial de búsquedas guardado localmente
+• Backup y restauración selectiva de configuración
+
+📁 UBICACIÓN DE CONFIGURACIÓN:
+• Alias: $CONF
+• Historial: $HIST
+
+🛠️ Autor: dmnmsc
+📦 Versión: $VERSION
+📅 Última actualización: $(date +\"%Y-%m-%d\")
+"
+
+  kdialog --title "Repositorio en GitHub" \
+          --yesno "¿Quieres abrir el repositorio del proyecto en tu navegador?\n\n🔗 https://github.com/dmnmsc/kwebsearch"
+
+  if [ $? -eq 0 ]; then
+    xdg-open "https://github.com/dmnmsc/kwebsearch"
+  fi
+
+  exec "$0"  # ← Reejecuta el script desde el principio
+}
+
 ver_historial() {
   if [[ ! -s "$HIST" ]]; then
     kdialog --msgbox "ℹ️ No hay historial disponible todavía."
@@ -253,40 +282,95 @@ restablecer_alias() {
 
 # backup_config
 backup_config() {
+  opcion=$(kdialog --title "Exportar configuración" \
+    --radiolist "¿Qué deseas exportar?" \
+    1 "⚙️ Alias (kwebsearch.conf)" on \
+    2 "🕘 Historial (kwebsearch_history)" off \
+    3 "📦 Ambos" off) || return
+
   TIMESTAMP=$(date +"%Y-%m-%d_%H-%M-%S")
-  DEST="$BACKUP_DIR/kwebsearch_backup_$TIMESTAMP"
-  mkdir -p "$DEST"
-  cp "$CONF" "$DEST/kwebsearch.conf"
-  cp "$HIST" "$DEST/kwebsearch_history"
-  kdialog --msgbox "✅ Configuración exportada en:\n$DEST"
-  exit
+
+  case "$opcion" in
+    1)
+      DEST="$BACKUP_DIR/${TIMESTAMP}_kwebsearch_backup_conf"
+      mkdir -p "$DEST"
+      cp "$CONF" "$DEST/kwebsearch.conf"
+      kdialog --msgbox "✅ Alias exportados en:\n$DEST"
+      ;;
+    2)
+      DEST="$BACKUP_DIR/${TIMESTAMP}_kwebsearch_backup_hist"
+      mkdir -p "$DEST"
+      cp "$HIST" "$DEST/kwebsearch_history"
+      kdialog --msgbox "✅ Historial exportado en:\n$DEST"
+      ;;
+    3)
+      DEST="$BACKUP_DIR/${TIMESTAMP}_kwebsearch_backup_conf_hist"
+      mkdir -p "$DEST"
+      cp "$CONF" "$DEST/kwebsearch.conf"
+      cp "$HIST" "$DEST/kwebsearch_history"
+      kdialog --msgbox "✅ Alias e historial exportados en:\n$DEST"
+      ;;
+    *)
+      kdialog --error "❌ Opción no válida"
+      ;;
+  esac
 }
 
 # restore_config
 restore_config() {
-  # Listar etiquetas de backups existentes
-  mapfile -t LABELS < <(
-    ls -1d "$BACKUP_DIR"/kwebsearch_backup_* 2>/dev/null \
-      | sort \
-      | sed -e 's#.*/kwebsearch_backup_##'
-  )
+  while true; do
+    BACKUPS=($(ls -d "$BACKUP_DIR"/[0-9]*_kwebsearch_backup_* 2>/dev/null | sort -r))
+    [[ ${#BACKUPS[@]} -eq 0 ]] && {
+      kdialog --error "❌ No se encontraron backups en $BACKUP_DIR"
+      return
+    }
 
-  if (( ${#LABELS[@]} == 0 )); then
-    kdialog --msgbox "❌ No se encontró ningún backup en $BACKUP_DIR"
-    exit
-  fi
+    SELECTED_BACKUP=$(kdialog --title "Restaurar configuración" \
+      --combobox "Selecciona el backup a restaurar:" \
+      $(for dir in "${BACKUPS[@]}"; do echo "$(basename "$dir")"; done)) || return
 
-  seleccion=$(kdialog --title "Importar backup" \
-    --combobox "Elige el backup a restaurar:" \
-    "${LABELS[@]}")
-  [[ -z "$seleccion" ]] && exit
+    FULL_PATH="$BACKUP_DIR/$SELECTED_BACKUP"
 
-  backup_path="$BACKUP_DIR/kwebsearch_backup_$seleccion"
-  cp "$backup_path/kwebsearch.conf" "$CONF"
-  cp "$backup_path/kwebsearch_history" "$HIST"
-  kdialog --msgbox "✅ Backup restaurado:\n$backup_path"
+    HAS_CONF=false
+    HAS_HIST=false
+    [[ -f "$FULL_PATH/kwebsearch.conf" ]] && HAS_CONF=true
+    [[ -f "$FULL_PATH/kwebsearch_history" ]] && HAS_HIST=true
 
-  exec bash "$0"
+    if ! $HAS_CONF && ! $HAS_HIST; then
+      kdialog --error "❌ El backup seleccionado no contiene archivos válidos.\nIntenta con otro."
+      continue  # Vuelve al selector
+    fi
+
+    # Decide qué restaurar
+    if $HAS_CONF && $HAS_HIST; then
+      RESTORE_OPTION=$(kdialog --title "Contenido detectado" \
+        --radiolist "Elige qué restaurar del backup:" \
+        1 "⚙️ Alias (kwebsearch.conf)" on \
+        2 "🕘 Historial (kwebsearch_history)" off \
+        3 "📦 Ambos" off) || continue
+    elif $HAS_CONF; then
+      RESTORE_OPTION=1
+    elif $HAS_HIST; then
+      RESTORE_OPTION=2
+    fi
+
+    case "$RESTORE_OPTION" in
+      1)
+        cp "$FULL_PATH/kwebsearch.conf" "$CONF"
+        kdialog --msgbox "✅ Alias restaurados correctamente"
+        ;;
+      2)
+        cp "$FULL_PATH/kwebsearch_history" "$HIST"
+        kdialog --msgbox "✅ Historial restaurado correctamente"
+        ;;
+      3)
+        cp "$FULL_PATH/kwebsearch.conf" "$CONF"
+        cp "$FULL_PATH/kwebsearch_history" "$HIST"
+        kdialog --msgbox "✅ Alias e historial restaurados correctamente"
+        ;;
+    esac
+    break  # Restauración exitosa, salimos del bucle
+  done
 }
 
 mostrar_ayuda() {
@@ -303,13 +387,14 @@ mostrar_ayuda() {
    _history      → Ver historial reciente
    _clear          → Borrar historial
 
-💾  CONFIGURACIÓN & BACKUP
-   _config       → Menú general
+💾  MENÚ & BACKUP
+   _menu       → Menú general
    _backup     → Crear backup (configuración e historial)
    _restore     → Restaurar backup existente
 
 ℹ️  VARIOS
    _help          → Ver esta ayuda
+   _about       → Créditos y versión
    _exit           → Salir del script
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
   bash "$0" &
@@ -377,7 +462,8 @@ case "$input" in
   _newalias)  crear_alias ;;
   _backup)      backup_config ;;
   _restore)     restore_config ;;
-  _config)
+  _about)     about_info ;;
+  _menu)
   OPCION=$(kdialog --title "Opciones" --menu "¿Qué deseas hacer?" \
     1 "📘 Seleccionar alias" \
     2 "🆕 Crear alias" \
@@ -388,8 +474,9 @@ case "$input" in
     7 "🧹 Limpiar historial" \
     8 "📤 Crear backup (configuración e historial)" \
     9 "📥 Restaurar backup existente" \
-    10 "📖 Ver ayuda" \
-    11 "❌ Salir")
+    10 "🧾 Ver ayuda" \
+    11 "ℹ️ Acerca de" \
+    12 "❌ Salir")
   case "$OPCION" in
     1) mostrar_alias      ;;
     2) crear_alias        ;;
@@ -401,7 +488,8 @@ case "$input" in
     8) backup_config      ;;
     9) restore_config     ;;
     10) mostrar_ayuda      ;;
-    11) exit              ;;
+    11) about_info      ;;
+    12) exit              ;;
   esac
   ;;
 
