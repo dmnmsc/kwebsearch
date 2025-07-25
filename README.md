@@ -1,6 +1,6 @@
 # 📘 KWebSearch — Buscador gráfico personalizado para KDE
 
-**Versión:** 1.2  
+**Versión:** 1.3  
 **Autor:** dmnmsc  
 **Licencia:** [GNU General Public License v3.0](https://www.gnu.org/licenses/gpl-3.0.html)  
 **Entorno recomendado:** KDE Plasma con kdialog  
@@ -10,26 +10,34 @@
 
 ## 🎯 ¿Qué es?
 
-KWebSearch es un script Bash con interfaz visual en `kdialog` que te permite realizar búsquedas web rápidas usando alias personalizables. Está diseñado para usuarios KDE que buscan un acceso instantáneo a servicios online como Google, Wikipedia, YouTube, GitHub, AUR, diccionarios y muchos más, todo desde su escritorio.
 
-Incluye soporte para bangs de DuckDuckGo, creación de alias nuevos desde interfaz gráfica, historial con selector visual, backups organizados por fecha, restauración gráfica, y una ayuda integrada.
+KWebSearch es un script Bash con interfaz gráfica que te permite hacer búsquedas rápidas en internet usando comandos cortos llamados alias. Está pensado para usuarios de KDE que quieren buscar en Google, Wikipedia, YouTube, GitHub, y muchos otros sitios sin abrir el navegador primero.
+
+Es compatible con `!bangs` de DuckDuckGo, como `!g` para buscar en Google o `!yt` para buscar en YouTube. Además, permite abrir sitios web directamente usando un prefijo configurable (por defecto el símbolo `>`).
+
+Puedes crear tus propios alias, usar comandos especiales para ver el historial, hacer backups, y más, todo desde ventanas gráficas fáciles de usar.
 
 ---
 
-## ⚙️ Características
+## TL;DR
 
-- 🔎 Alias personalizados para búsquedas específicas, con interfaz para crearlos fácilmente
-- 🧠 Alias por defecto configurable o reseteable (a DuckDuckGo)
-- 🔄 **Menú visual principal (`_menu`) con todas las funciones**
-- ✏️ Edición rápida del archivo de alias desde el script
-- 🕘 Visualización del historial con selección interactiva
-- 🧹 Limpieza de historial desde la interfaz
-- 📤 Exportación de configuración e historial con fecha única
-- 📥 Restauración de backups guardados desde selector gráfico
-- 🆕 Comando `_newalias` para añadir alias sin tocar archivos
-- 🧾 Ayuda rápida con `_help`
-- 🧠 **Nuevo comando `_about` para ver información de versión**
-- 🌐 Compatible con bangs de DuckDuckGo (`!g`, `!yt`, `!aur`, etc.)
+KWebSearch es un buscador rápido con interfaz gráfica para KDE que usa alias personalizables, soporta los bangs de DuckDuckGo y permite abrir URLs directamente con un prefijo configurable.
+
+
+---
+
+## ⚙️ Características principales
+
+- 🔎 Alias personalizados para búsquedas rápidas en diferentes servicios web  
+- 🧠 Compatible con los bangs de DuckDuckGo para ampliar opciones de búsqueda (`!g`, `!yt`, `!aur`, etc.)
+- 🌐 Permite abrir URLs directamente con un prefijo configurable (por defecto `>`)  
+- 🔄 Menú principal con acceso a todas las funciones  
+- ✏️ Crear, editar y gestionar alias desde interfaz gráfica sin tocar archivos  
+- 🕘 Historial con selector visual para consultar o repetir búsquedas previas  
+- 🧹 Limpieza del historial desde la propia interfaz  
+- 📤 Exportación y respaldo automático de configuración e historial  
+- 📥 Restauración gráfica de copias de seguridad guardadas  
+- 🆕 Comandos especiales como `_about`, `_help`, `_prefix` y más para facilitar el uso  
 
 ---
 
@@ -130,9 +138,11 @@ Cada alias tiene tres componentes: **nombre**, **descripción** y **URL de búsq
 | `_newalias`     | Crear alias desde interfaz                   |
 | `_edit`         | Editar alias manualmente                     |
 | `_default`      | Establecer alias por defecto                 |
-| `_resetalias`   | Restablecer alias por defecto a DuckDuckGo  |
+| `_resetalias`   | Restablecer alias por defecto a DuckDuckGo   |
 | `_history`      | Ver historial de búsquedas                   |
 | `_clear`        | Borrar historial completo                    |
+| `>` 🆕          | Abrir directamente una URL en el navegador   |
+| `_prefix` 🆕    | Cambiar el prefijo que activa la apertura directa de URLs  |
 | `_backup`       | Crear copia de seguridad                     |
 | `_restore`      | Restaurar una copia anterior                 |
 | `_help`         | Mostrar ayuda integrada                      |
