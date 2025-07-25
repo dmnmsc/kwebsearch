@@ -1,3 +1,7 @@
+<div align="center">
+  <img src="screenshots/kwebsearch_main_ui.png" alt="Interfaz principal de KWebSearch" width="70%" />
+</div>
+
 # 📘 KWebSearch — Buscador gráfico personalizado para KDE
 
 **Versión:** 1.3  
@@ -7,6 +11,7 @@
 **Idioma:** Español
 
 ---
+
 
 ## 🎯 ¿Qué es?
 
