@@ -17,8 +17,13 @@ touch "$HIST"
 # 📝 Alias inicial
 if [[ ! -f "$CONF" ]]; then
 cat <<EOF > "$CONF"
+# 🧠 Alias por defecto (si deja vacío, se usará DuckDuckGo - powered by !bangs)
 default_alias=""
 
+# 🚀 Prefijo para abrir directamente URLs  (ej: >github.com)
+cmd_prefix=">"  # Puedes cambiarlo por ~, @, ^, ::, >, etc.
+
+# 🔎 Alias personalizados
 g)xdg-open "https://www.google.com/search?q=\$query";;#Google
 .g)xdg-open "https://www.google.com/search?tbm=shop&q=\$query";;#Google Shopping
 i)xdg-open "https://www.google.com/search?tbm=isch&q=\$query";;#Imágenes
@@ -42,6 +47,9 @@ EOF
 
   kdialog --msgbox "✅ Archivo de alias creado en:\n$CONF"
 fi
+
+# 📥 Cargar configuraciones dinámicas del archivo
+source "$CONF"
 
 # 🧠 Alias por defecto
 DEFAULT_ALIAS=$(grep -E '^default_alias=' "$CONF" | cut -d= -f2 | tr -d '"')
@@ -373,6 +381,21 @@ restore_config() {
   done
 }
 
+prefix() {
+  nuevo_prefijo=$(kdialog --inputbox "Símbolo actual: $cmd_prefix\n\nIntroduce nuevo prefijo para abrir URLs directamente:" "$cmd_prefix")
+
+  if [[ -z "$nuevo_prefijo" || "$nuevo_prefijo" =~ [[:space:]] ]]; then
+    kdialog --error "Prefijo inválido. No se realizaron cambios."
+    exit 1
+  fi
+
+  # Sustituir línea cmd_prefix en kwebsearch.conf
+  sed -i "s/^cmd_prefix=.*$/cmd_prefix=\"$nuevo_prefijo\"/" "$CONF"
+  kdialog --msgbox "✅ Prefijo actualizado a: $nuevo_prefijo"
+  bash "$0" &
+  exit
+}
+
 mostrar_ayuda() {
   kdialog --msgbox "🧾 Comandos disponibles
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -392,10 +415,14 @@ mostrar_ayuda() {
    _backup     → Crear backup (configuración e historial)
    _restore     → Restaurar backup existente
 
+🌐  ABRIR URL
+   >                  → Abre directamente el sitio web (ej: >github.com)
+   _prefix        → Establecer el símbolo para abrir URLs
+
 ℹ️  VARIOS
-   _help          → Ver esta ayuda
    _about       → Créditos y versión
-   _exit           → Salir del script
+   _help          → Ver esta ayuda
+   _exit            → Salir del script
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
   bash "$0" &
   exit
@@ -411,6 +438,14 @@ ejecutar_busqueda() {
 
 procesar_busqueda() {
   input="$1"
+  # Abrir web directamente si input empieza por cmd_prefix y tiene forma de dominio
+if [[ "$input" =~ ^$cmd_prefix([a-zA-Z0-9.-]+\.[a-z]{2,})(/.*)?$ ]]; then
+  site="${BASH_REMATCH[1]}"
+  path="${BASH_REMATCH[2]}"
+  [[ -z "$path" ]] && path=""
+  xdg-open "https://${site}${path}"
+  exit
+fi
   grep -qxF "$input" "$HIST" || echo "$input" >> "$HIST"
 
   if [[ "$input" =~ ^([a-zA-Z0-9_.@,+-]+):(.*) ]]; then
@@ -458,6 +493,7 @@ case "$input" in
   _clear)       borrar_historial ;;
   _default)     establecer_default ;;
   _history)     ver_historial ;;
+  _prefix)        prefix ;;
   _resetalias)  restablecer_alias ;;
   _newalias)  crear_alias ;;
   _backup)      backup_config ;;
@@ -472,11 +508,12 @@ case "$input" in
     5 "🔄 Restablecer alias por defecto" \
     6 "🕘 Ver historial" \
     7 "🧹 Limpiar historial" \
-    8 "📤 Crear backup (configuración e historial)" \
-    9 "📥 Restaurar backup existente" \
-    10 "🧾 Ver ayuda" \
-    11 "ℹ️ Acerca de" \
-    12 "❌ Salir")
+    8 "🌐 Establecer símbolo para abrir URL" \
+    9 "📤 Crear backup (configuración e historial)" \
+    10 "📥 Restaurar backup existente" \
+    11 "🧾 Ver ayuda" \
+    12 "ℹ️ Acerca de" \
+    13 "❌ Salir")
   case "$OPCION" in
     1) mostrar_alias      ;;
     2) crear_alias        ;;
@@ -485,11 +522,12 @@ case "$input" in
     5) restablecer_alias  ;;
     6) ver_historial  ;;
     7)borrar_historial   ;;
-    8) backup_config      ;;
-    9) restore_config     ;;
-    10) mostrar_ayuda      ;;
-    11) about_info      ;;
-    12) exit              ;;
+    8) prefix      ;;
+    9) backup_config      ;;
+    10) restore_config     ;;
+    11) mostrar_ayuda      ;;
+    12) about_info      ;;
+    13) exit              ;;
   esac
   ;;
 
