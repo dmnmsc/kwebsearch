@@ -4,7 +4,7 @@
 
 # 📘 KWebSearch — Buscador gráfico personalizado para KDE
 
-**Versión:** 1.3  
+**Versión:** 1.4  
 **Autor:** dmnmsc  
 **Licencia:** [GNU General Public License v3.0](https://www.gnu.org/licenses/gpl-3.0.html)  
 **Entorno recomendado:** KDE Plasma con kdialog  
@@ -84,27 +84,28 @@ Al iniciar `kwebsearch.sh` por primera vez, se crea un archivo de configuración
 
 Cada alias es un identificador corto que puedes escribir antes de tu búsqueda para dirigir la consulta al sitio correspondiente.
 
-| Alias | Servicio             | Descripción              | Ejemplo de uso                   |
-|-------|----------------------|--------------------------|-----------------------------------|
-| g     | Google               | Búsqueda clásica         | `g:inteligencia artificial`       |
-| .g    | Google Shopping      | Productos                | `.g:smartwatch deporte`           |
-| i     | Google Imágenes      | Búsqueda visual          | `i:noche estrellada`              |
-| y     | YouTube (PWA)        | Vídeos                   | `y:linux tutorial español`        |
-| w     | Wikipedia (ES)       | Español                  | `w:teoría cuántica`               |
-| .w    | Wikipedia (EN)       | Inglés                   | `.w:quantum theory`               |
-| k     | Kimovil              | Comparar móviles         | `k:xiaomi redmi note 12`          |
-| .k    | GSMArena             | Fichas técnicas          | `.k:samsung galaxy s23 ultra`     |
-| a     | Amazon               | Productos en España      | `a:disco duro ssd externo`        |
-| .a    | Amazon (Incógnito)   | Navegador Chromium       | `.a:raspberry pi 5`               |
-| d     | RAE                  | Diccionario español      | `d:resiliencia`                   |
-| .d    | WordReference        | Sinónimos en español     | `.d:rápido`                       |
-| c     | DIEC (IEC)           | Diccionario catalán      | `c:llibertat`                     |
-| .c    | SoftCatalà           | Sinónimos en catalán     | `.c:bonic`                        |
-| e     | WordReference (EN)   | Definiciones inglés      | `e:tired`                         |
-| .e    | WordReference        | Sinónimos inglés         | `.e:fast`                         |
-| aur   | AUR (Arch Linux)     | Paquetes comunitarios    | `aur:kdialog`                     |
-| gh    | GitHub               | Repositorios             | `gh:mpv`                          |
-| trans | Google Translate     | Traducción automática    | `trans:I won't give up`           |
+| Alias | Servicio             | Descripción              | Ejemplo de uso                              |
+|-------|----------------------|--------------------------|---------------------------------------------|
+| p     | Perplexity.ai        | Búsqueda con IA          | `p:inteligencia artificial`                 |
+| g     | Google               | Búsqueda clásica         | `g:cómo funciona el hidrógeno verde`        |
+| .g    | Google Shopping      | Productos                | `.g:smartwatch deporte`                     |
+| i     | Google Imágenes      | Búsqueda visual          | `i:noche estrellada`                        |
+| y     | YouTube (PWA)        | Vídeos                   | `y:linux tutorial español`                  |
+| w     | Wikipedia (ES)       | Español                  | `w:teoría cuántica`                         |
+| .w    | Wikipedia (EN)       | Inglés                   | `.w:quantum theory`                         |
+| k     | Kimovil              | Comparar móviles         | `k:xiaomi redmi note 12`                    |
+| .k    | GSMArena             | Fichas técnicas          | `.k:samsung galaxy s23 ultra`               |
+| a     | Amazon               | Productos en España      | `a:disco duro ssd externo`                  |
+| .a    | Amazon (Incógnito)   | Navegador Chromium       | `.a:raspberry pi 5`                         |
+| d     | RAE                  | Diccionario español      | `d:resiliencia`                             |
+| .d    | WordReference        | Sinónimos en español     | `.d:rápido`                                 |
+| c     | DIEC (IEC)           | Diccionario catalán      | `c:llibertat`                               |
+| .c    | SoftCatalà           | Sinónimos en catalán     | `.c:bonic`                                  |
+| e     | WordReference (EN)   | Definiciones inglés      | `e:tired`                                   |
+| .e    | WordReference        | Sinónimos inglés         | `.e:fast`                                   |
+| aur   | AUR (Arch Linux)     | Paquetes comunitarios    | `aur:kdialog`                               |
+| gh    | GitHub               | Repositorios             | `gh:mpv`                                    |
+| trans | Google Translate     | Traducción automática    | `trans:I won't give up`                     |
 
 
 > **ℹ️ Puedes consultar la lista completa de alias con el comando especial `_alias` o revisando el archivo `kwebsearch.conf`.**
