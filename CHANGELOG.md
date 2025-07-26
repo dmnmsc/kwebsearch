@@ -32,3 +32,25 @@
 
 ### ✅ Otros
 - Texto de ayuda actualizado para reflejar los nuevos comandos.
+
+## v1.1 – 2025-07-23
+
+### ✨ Novedades
+- Añadida función `crear_alias()` para generar alias personalizados mediante interfaz gráfica guiada.
+- Validaciones incluidas para clave, descripción y plantilla, asegurando el uso correcto de `$query`.
+- Opción para previsualizar el alias antes de guardarlo.
+
+### 🛠️ Mejoras
+- DuckDuckGo añadido como alias vacío destacado si es el predeterminado.
+- Opción para restablecer DuckDuckGo directamente desde el menú de alias.
+- El menú `mostrar_alias` se refactorizó para incluir selección directa, diseño más claro y mensajes mejorados.
+- Validaciones más explícitas al crear alias (clave inválida, ausencia de `$query`, comillas desbalanceadas).
+- Manejo de alias mediante arrays para mejorar lógica y legibilidad.
+- Uso consistente de `local` en variables internas para evitar interferencias.
+- Cuadros de diálogo `kdialog` rediseñados con mejor presentación y opciones más claras.
+- Comprobaciones añadidas para cancelar o salir si el usuario no ingresa datos.
+
+### 🐞 Correcciones
+- Validación mejorada para claves de alias, eliminando caracteres no permitidos y evitando duplicados.
+- Refactorización del manejo del alias predeterminado y su restablecimiento, eliminando redundancias.
+- Optimización en la lectura y creación del archivo de alias sin cambios funcionales relevantes.
