@@ -1,5 +1,16 @@
 # 📦 kwebsearch - Registro de cambios
 
+## v1.4 – 2025-07-26
+
+### ✨ Novedades
+- Añadida opción para realizar búsquedas con Perplexity AI.
+- Entrada en el menú principal para abrir URLs directamente.
+
+### 🛠️ Mejoras
+- Refactorización general del código para mejorar mantenimiento y legibilidad.
+- Ejemplos ampliados para los bang (`!`) en las búsquedas.
+- Modificada la frase inicial que aparece al abrir el script.
+
 ## v1.3 – 2025-07-25
 
 ### ✨ Novedades
