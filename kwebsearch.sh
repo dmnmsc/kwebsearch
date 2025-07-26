@@ -1,5 +1,7 @@
 #!/bin/bash
-VERSION="1.3"
+VERSION="1.4"
+
+# ────────────── ☑️ CARGA Y DEPENDENCIAS ──────────────
 
 # ✅ Comprobar si kdialog está instalado
 if ! command -v kdialog &> /dev/null; then
@@ -7,14 +9,16 @@ if ! command -v kdialog &> /dev/null; then
   exit 1
 fi
 
-# 📁 Rutas
+# ────────────── 📁 RUTAS Y CONFIGURACIÓN INICIAL ──────────────
+
+# ======Rutas======#
 CONF="$HOME/kwebsearch/kwebsearch.conf"
 HIST="$HOME/.kwebsearch_history"
 BACKUP_DIR="$HOME/kwebsearch"
 mkdir -p "$BACKUP_DIR"
 touch "$HIST"
 
-# 📝 Alias inicial
+# ======📝 Generar kwebsearch.conf======#
 if [[ ! -f "$CONF" ]]; then
 cat <<EOF > "$CONF"
 # 🧠 Alias por defecto (si deja vacío, se usará DuckDuckGo - powered by !bangs)
@@ -24,6 +28,7 @@ default_alias=""
 cmd_prefix=">"  # Puedes cambiarlo por ~, @, ^, ::, >, etc.
 
 # 🔎 Alias personalizados
+p)xdg-open "https://www.perplexity.ai/search?q=\$query";;#Perplexity.ai
 g)xdg-open "https://www.google.com/search?q=\$query";;#Google
 .g)xdg-open "https://www.google.com/search?tbm=shop&q=\$query";;#Google Shopping
 i)xdg-open "https://www.google.com/search?tbm=isch&q=\$query";;#Imágenes
@@ -48,54 +53,74 @@ EOF
   kdialog --msgbox "✅ Archivo de alias creado en:\n$CONF"
 fi
 
-# 📥 Cargar configuraciones dinámicas del archivo
+# ======📥 Cargar configuraciones dinámicas del archivo======#
 source "$CONF"
 
-# 🧠 Alias por defecto
+# ======🧠 Alias por defecto======#
 DEFAULT_ALIAS=$(grep -E '^default_alias=' "$CONF" | cut -d= -f2 | tr -d '"')
 
-  # 🔧 Funciones
-about_info() {
-  kdialog --title "Acerca de kwebsearch" --msgbox "
-Herramienta personal para realizar búsquedas web mediante alias personalizados.
+  #######################
+  #====== 🔧 Funciones=======#
+  #######################
 
-📦 FUNCIONES PRINCIPALES:
-• Configuración rápida mediante alias
-• Historial de búsquedas guardado localmente
-• Backup y restauración selectiva de configuración
+# ────────────── 🧠 GESTIÓN DE ALIAS ──────────────
 
-📁 UBICACIÓN DE CONFIGURACIÓN:
-• Alias: $CONF
-• Historial: $HIST
+#======MOSTRAR ALIAS======#
+mostrar_alias() {
+  local keys=() descs=() options=() sel key desc query
 
-🛠️ Autor: dmnmsc
-📦 Versión: $VERSION
-📅 Última actualización: $(date +\"%Y-%m-%d\")
-"
-
-  kdialog --title "Repositorio en GitHub" \
-          --yesno "¿Quieres abrir el repositorio del proyecto en tu navegador?\n\n🔗 https://github.com/dmnmsc/kwebsearch"
-
-  if [ $? -eq 0 ]; then
-    xdg-open "https://github.com/dmnmsc/kwebsearch"
+  # 0) Opción DuckDuckGo (alias vacío)
+  keys+=("")
+  descs+=("DuckDuckGo")
+  if [[ -z "$DEFAULT_ALIAS" ]]; then
+    options+=( "DuckDuckGo 🟢 (predeterminado)" )
+  else
+    options+=( "DuckDuckGo (predeterminado)" )
   fi
 
-  exec "$0"  # ← Reejecuta el script desde el principio
-}
+  # 1) Leer CONF y rellenar arrays con tus alias habituales
+  while IFS= read -r line; do
+    [[ "$line" =~ ^([a-zA-Z0-9_.@,+-]*)\)[^#]*#[[:space:]]*(.*)$ ]] || continue
+    key="${BASH_REMATCH[1]}"
+    desc="${BASH_REMATCH[2]}"
+    [[ "$key" == "$DEFAULT_ALIAS" ]] && desc+=" 🟢 (por defecto)"
+    keys+=("$key")
+    descs+=("$desc")
+    options+=( "${desc} (${key})" )
+  done < "$CONF"
 
-ver_historial() {
-  if [[ ! -s "$HIST" ]]; then
-    kdialog --msgbox "ℹ️ No hay historial disponible todavía."
+  # 2) Mostrar combobox SIN reset
+  sel=$(kdialog \
+    --title "Alias disponibles" \
+    --combobox "Selecciona un alias:" \
+    "${options[@]}" ) || exit
+  [[ -z "$sel" ]] && exit
+
+  # 3) Encontrar índice para recuperar key y desc
+  for i in "${!options[@]}"; do
+    [[ "${options[i]}" == "$sel" ]] && key="${keys[i]}" desc="${descs[i]}" && break
+  done
+
+  # 4) Si el alias elegido es vacío → DuckDuckGo directo
+  if [[ -z "$key" ]]; then
+    query=$(kdialog \
+      --title "DuckDuckGo" \
+      --inputbox "Escribe tu consulta:") || exit
+    [[ -z "$query" ]] && exit
+    xdg-open "https://duckduckgo.com/?q=$(echo "$query" | sed 's/ /+/g')"
     exit
   fi
 
-  mapfile -t ITEMS < <(tac "$HIST")
-  sel=$(kdialog --title "🕘 Historial de búsquedas" \
-    --combobox "Selecciona una búsqueda anterior:" "${ITEMS[@]}") || exit
+  # 5) Para cualquier otro alias, pedimos su consulta habitual
+  query=$(kdialog \
+    --title "$desc" \
+    --inputbox "Escribe tu consulta:") || exit
+  [[ -z "$query" ]] && exit
 
-  [[ -n "$sel" ]] && procesar_busqueda "$sel"
+  procesar_busqueda "$key:$query"
 }
 
+#======CREAR ALIAS======#
 crear_alias() {
   local key="" desc="" tmpl=""
 
@@ -167,72 +192,14 @@ crear_alias() {
   exec bash "$0"
 }
 
-mostrar_alias() {
-  local keys=() descs=() options=() sel key desc query
-
-  # 0) Opción DuckDuckGo (alias vacío)
-  keys+=("")
-  descs+=("DuckDuckGo")
-  if [[ -z "$DEFAULT_ALIAS" ]]; then
-    options+=( "DuckDuckGo 🟢 (predeterminado)" )
-  else
-    options+=( "DuckDuckGo (predeterminado)" )
-  fi
-
-  # 1) Leer CONF y rellenar arrays con tus alias habituales
-  while IFS= read -r line; do
-    [[ "$line" =~ ^([a-zA-Z0-9_.@,+-]*)\)[^#]*#[[:space:]]*(.*)$ ]] || continue
-    key="${BASH_REMATCH[1]}"
-    desc="${BASH_REMATCH[2]}"
-    [[ "$key" == "$DEFAULT_ALIAS" ]] && desc+=" 🟢 (por defecto)"
-    keys+=("$key")
-    descs+=("$desc")
-    options+=( "${desc} (${key})" )
-  done < "$CONF"
-
-  # 2) Mostrar combobox SIN reset
-  sel=$(kdialog \
-    --title "Alias disponibles" \
-    --combobox "Selecciona un alias:" \
-    "${options[@]}" ) || exit
-  [[ -z "$sel" ]] && exit
-
-  # 3) Encontrar índice para recuperar key y desc
-  for i in "${!options[@]}"; do
-    [[ "${options[i]}" == "$sel" ]] && key="${keys[i]}" desc="${descs[i]}" && break
-  done
-
-  # 4) Si el alias elegido es vacío → DuckDuckGo directo
-  if [[ -z "$key" ]]; then
-    query=$(kdialog \
-      --title "DuckDuckGo" \
-      --inputbox "Escribe tu consulta:") || exit
-    [[ -z "$query" ]] && exit
-    xdg-open "https://duckduckgo.com/?q=$(echo "$query" | sed 's/ /+/g')"
-    exit
-  fi
-
-  # 5) Para cualquier otro alias, pedimos su consulta habitual
-  query=$(kdialog \
-    --title "$desc" \
-    --inputbox "Escribe tu consulta:") || exit
-  [[ -z "$query" ]] && exit
-
-  procesar_busqueda "$key:$query"
-}
-
+#======EDITAR ALIAS======#
 editar_alias() {
   xdg-open "$CONF"
   exit
 }
 
-borrar_historial() {
-  kdialog --yesno "¿Seguro que deseas borrar el historial?"
-  [[ $? -eq 0 ]] && > "$HIST" && kdialog --msgbox "✅ Historial borrado correctamente." && bash "$0" &
-  exit
-}
-
-establecer_default() {
+#======DEFAULT ALIAS======#
+default_alias() {
     local keys=() descs=() options=() sel key desc new_default
 
     # 1) Leer CONF y rellenar arrays
@@ -280,15 +247,76 @@ establecer_default() {
     kdialog --msgbox "✅ Alias por defecto actualizado: $desc"
 
     exit
-  }
+}
 
+#======RESET ALIAS======#
 restablecer_alias() {
   sed -i 's/^default_alias=.*/default_alias=""/' "$CONF"
   kdialog --msgbox "🔄 Alias por defecto restablecido a DuckDuckGo"
   exit
 }
 
-# backup_config
+# ────────────── 🕘 HISTORIAL DE BÚSQUEDAS ──────────────
+
+#======VER HISTORIAL======#
+ver_historial() {
+  if [[ ! -s "$HIST" ]]; then
+    kdialog --msgbox "ℹ️ No hay historial disponible todavía."
+    exit
+  fi
+
+  mapfile -t ITEMS < <(tac "$HIST")
+  sel=$(kdialog --title "🕘 Historial de búsquedas" \
+    --combobox "Selecciona una búsqueda anterior:" "${ITEMS[@]}") || exit
+
+  [[ -n "$sel" ]] && procesar_busqueda "$sel"
+}
+
+#======BORRAR HISTORIAL======#
+borrar_historial() {
+  kdialog --yesno "¿Seguro que deseas borrar el historial?"
+  [[ $? -eq 0 ]] && > "$HIST" && kdialog --msgbox "✅ Historial borrado correctamente." && bash "$0" &
+  exit
+}
+
+# ────────────── 🌐 FUNCIONES RELACIONADAS CON URL ──────────────
+
+# Función auxiliar para abrir URLs, añade https si falta
+abrir_url_directa() {
+  local url="$1"
+  if [[ ! "$url" =~ ^https?:// ]]; then
+    url="https://$url"
+  fi
+  xdg-open "$url"
+}
+
+# Abrir URL mediante inputbox (interacción manual)
+abrir_url() {
+  local url
+  url=$(kdialog --inputbox "Introduce la URL para abrir (ej: example.com o https://example.com):") || return
+  [[ -z "$url" ]] && return
+  abrir_url_directa "$url"
+}
+
+# Cambiar símbolo/prefijo para abrir URL directamente (usa cmd_prefix)
+prefix() {
+  local nuevo_prefijo
+  nuevo_prefijo=$(kdialog --inputbox "Símbolo actual: $cmd_prefix\n\nIntroduce nuevo prefijo para abrir URLs directamente:" "$cmd_prefix")
+
+  if [[ -z "$nuevo_prefijo" || "$nuevo_prefijo" =~ [[:space:]] ]]; then
+    kdialog --error "Prefijo inválido. No se realizaron cambios."
+    exit 1
+  fi
+
+  sed -i "s/^cmd_prefix=.*$/cmd_prefix=\"$nuevo_prefijo\"/" "$CONF"
+  kdialog --msgbox "✅ Prefijo actualizado a: $nuevo_prefijo"
+  bash "$0" &
+  exit
+}
+
+# ────────────── 📦 FUNCIONES DE BACKUP ──────────────
+
+#======BACKUP_CONFIG======#
 backup_config() {
   opcion=$(kdialog --title "Exportar configuración" \
     --radiolist "¿Qué deseas exportar?" \
@@ -324,7 +352,7 @@ backup_config() {
   esac
 }
 
-# restore_config
+# ======RESTORE CONFIG======#
 restore_config() {
   while true; do
     BACKUPS=($(ls -d "$BACKUP_DIR"/[0-9]*_kwebsearch_backup_* 2>/dev/null | sort -r))
@@ -381,95 +409,171 @@ restore_config() {
   done
 }
 
-prefix() {
-  nuevo_prefijo=$(kdialog --inputbox "Símbolo actual: $cmd_prefix\n\nIntroduce nuevo prefijo para abrir URLs directamente:" "$cmd_prefix")
+# ────────────── ℹ️ INFORMACIÓN Y AYUDA ──────────────
 
-  if [[ -z "$nuevo_prefijo" || "$nuevo_prefijo" =~ [[:space:]] ]]; then
-    kdialog --error "Prefijo inválido. No se realizaron cambios."
-    exit 1
+#======HELP======
+mostrar_ayuda() {
+  local help_file
+  help_file=$(mktemp /tmp/kwebsearch_help.XXXXXX.txt)
+
+  cat > "$help_file" <<EOF
+🧾 AYUDA - Uso de kwebsearch
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🔎 FORMAS DE BUSCAR:
+
+ 🟢 !bang: Realiza búsquedas rápidas con alias de DuckDuckGo.
+    → Ejemplo: !w energía solar  (busca en Wikipedia)
+    → Ejemplo: !gh kwebsearch   (busca en GitHub)
+
+ 🔎 alias:consulta: Usa alias personalizados definidos por ti.
+    → Ejemplo: g:teclado mecánico  (busca en Google)
+    → Ejemplo: w:Linux              (busca en Wikipedia ES)
+
+ 🌐 >url: Abre directamente una URL en el navegador.
+    → Ejemplo: >github.com
+    → Ejemplo: >es.wikipedia.org/wiki/Bash
+
+ ✏️ Comandos internos (escribe en el prompt):
+    _alias           → Seleccionar alias para buscar
+    _newalias    → Crear nuevo alias personalizado
+    _edit             → Editar archivo de alias manualmente
+    _default       → Establecer alias por defecto
+    _resetalias   → Restablecer alias por defecto a DuckDuckGo
+
+    _history        → Ver historial de búsquedas recientes
+    _clear            → Borrar historial
+
+    _prefix          → Cambiar símbolo para abrir URLs directamente (ej: >)
+    _backup       → Crear copia de seguridad de configuración e historial
+    _restore       → Restaurar copia de seguridad existente
+
+    _help            → Mostrar esta ayuda
+    _about         → Información sobre kwebsearch
+    _exit             → Salir del programa
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+💡 CONSEJOS:
+ - Para alias, escribe alias:consulta (nota los dos puntos).
+ - Puedes combinar bangs y alias para búsquedas personalizadas y rápidas.
+ - Usa _help para ver esta ayuda en cualquier momento.
+ - Visita https://github.com/dmnmsc/kwebsearch para más información.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+EOF
+
+  kdialog --title "Ayuda kwebsearch" --textbox "$help_file" 800 600
+  rm -f "$help_file"
+
+  bash "$0" &
+  exit
+}
+
+#======ABOUT======#
+about_info() {
+  kdialog --title "Acerca de kwebsearch" --msgbox "
+🛠️ kwebsearch - Buscador web personalizado
+
+Versión: $VERSION
+Autor: dmnmsc
+Última actualización: $(date +'%Y-%m-%d')
+
+📌 ¿Qué es kwebsearch?
+Una herramienta sencilla y práctica para realizar búsquedas rápidas y abrir páginas web a través de alias y !bangs personalizados, usando una interfaz gráfica amigable basada en KDE/kdialog.
+
+⭐ Funciones principales:
+ • Uso rápido de alias para búsquedas específicas
+ • Integración con !bangs de DuckDuckGo para búsquedas versátiles
+ • Apertura directa de URLs con prefijo configurable
+ • Historial local de búsquedas guardado automáticamente
+ • Backup y restauración de configuración e historial
+
+📂 Archivos principales:
+• Configuración de alias: $CONF
+• Historial de búsquedas: $HIST
+
+🔗 Más información y código fuente:
+https://github.com/dmnmsc/kwebsearch
+
+¿Quieres visitar el repositorio en tu navegador?"
+
+  if kdialog --title "Repositorio en GitHub" --yesno \
+     "¿Quieres abrir el repositorio del proyecto en tu navegador?\n\n🔗 https://github.com/dmnmsc/kwebsearch"
+  then
+    xdg-open "https://github.com/dmnmsc/kwebsearch"
   fi
 
-  # Sustituir línea cmd_prefix en kwebsearch.conf
-  sed -i "s/^cmd_prefix=.*$/cmd_prefix=\"$nuevo_prefijo\"/" "$CONF"
-  kdialog --msgbox "✅ Prefijo actualizado a: $nuevo_prefijo"
-  bash "$0" &
-  exit
-}
+   exec "$0"  # reinicia el script completamente, reemplazando el proceso actual
+ }
 
-mostrar_ayuda() {
-  kdialog --msgbox "🧾 Comandos disponibles
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-📝  ALIAS
-   _alias         → Seleccionar alias
-   _newalias  → Crear alias
-   _edit           → Editar alias manualmente
-   _default     → Establecer alias por defecto
-   _resetalias → Restablecer alias por defecto
-
-🗄️  HISTORIAL
-   _history      → Ver historial reciente
-   _clear          → Borrar historial
-
-💾  MENÚ & BACKUP
-   _menu       → Menú general
-   _backup     → Crear backup (configuración e historial)
-   _restore     → Restaurar backup existente
-
-🌐  ABRIR URL
-   >                  → Abre directamente el sitio web (ej: >github.com)
-   _prefix        → Establecer el símbolo para abrir URLs
-
-ℹ️  VARIOS
-   _about       → Créditos y versión
-   _help          → Ver esta ayuda
-   _exit            → Salir del script
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-  bash "$0" &
-  exit
-}
+# ────────────── 🔍 PROCESAMIENTO DE BÚSQUEDAS ──────────────
 
 ejecutar_busqueda() {
   local key="$1"
   local query="$(echo "$2" | sed 's/ /+/g')"
+  local line command
   line=$(grep -E "^$key\)" "$CONF")
   command=$(echo "$line" | sed -E 's/^[^)]*\)[[:space:]]*(.*);;#.*$/\1/')
   eval "$command"
 }
 
 procesar_busqueda() {
-  input="$1"
+  local input="$1"
+
   # Abrir web directamente si input empieza por cmd_prefix y tiene forma de dominio
-if [[ "$input" =~ ^$cmd_prefix([a-zA-Z0-9.-]+\.[a-z]{2,})(/.*)?$ ]]; then
-  site="${BASH_REMATCH[1]}"
-  path="${BASH_REMATCH[2]}"
-  [[ -z "$path" ]] && path=""
-  xdg-open "https://${site}${path}"
-  exit
-fi
+  if [[ "$input" =~ ^$cmd_prefix([a-zA-Z0-9.-]+\.[a-z]{2,})(/.*)?$ ]]; then
+    local site="${BASH_REMATCH[1]}"
+    local path="${BASH_REMATCH[2]}"
+    [[ -z "$path" ]] && path=""
+    abrir_url_directa "${site}${path}"
+    exit
+  fi
+
   grep -qxF "$input" "$HIST" || echo "$input" >> "$HIST"
 
   if [[ "$input" =~ ^([a-zA-Z0-9_.@,+-]+):(.*) ]]; then
-    key="${BASH_REMATCH[1]}"
-    query="${BASH_REMATCH[2]}"
+    local key="${BASH_REMATCH[1]}"
+    local query="${BASH_REMATCH[2]}"
     if grep -Eq "^[[:space:]]*$key\)" "$CONF"; then
       ejecutar_busqueda "$key" "$query"
     elif [[ -n "$DEFAULT_ALIAS" ]]; then
       ejecutar_busqueda "$DEFAULT_ALIAS" "$input"
     else
-      xdg-open "https://duckduckgo.com/?q=$(echo "$input" | sed 's/ /+/g')"
+      abrir_url_directa "duckduckgo.com/?q=$(echo "$input" | sed 's/ /+/g')"
     fi
   else
     if [[ -n "$DEFAULT_ALIAS" ]]; then
       ejecutar_busqueda "$DEFAULT_ALIAS" "$input"
     else
-      xdg-open "https://duckduckgo.com/?q=$(echo "$input" | sed 's/ /+/g')"
+      abrir_url_directa "duckduckgo.com/?q=$(echo "$input" | sed 's/ /+/g')"
     fi
   fi
   exit
 }
 
-# 🌟 Ejemplo dinámico de bangs
-EJEMPLOS_BANG=("!w energía solar" "!gh kwebsearch" "!aur neovim" "!yt rammstein" "!g teclado mecánico")
+
+# ────────────── 🎛️ MENÚ PRINCIPAL Y FLUJO DE ENTRADA ──────────────
+#====== 🌟 Ejemplo dinámico de bangs======#
+EJEMPLOS_BANG=(
+  "!w energía solar"             # Bang Wikipedia
+  "!gh kwebsearch"              # Bang GitHub
+  "!aur neovim"                 # Bang Arch User Repository
+  "!yt rammstein"               # Bang YouTube
+  "!g teclado mecánico"         # Bang Google
+  ">github.com"                 # Abrir URL con prefijo >
+  "g:kdialog"                   # Alias personalizado (ej. Google)
+  "w:Linux"                    # Alias Wikipedia en español
+  "y:python tutorial"           # Alias YouTube
+  "a:ratón gamer"               # Alias Amazon
+  ".w:computadora"              # Alias Wikipedia en inglés
+  "d:programación"              # Alias RAE (Diccionario)
+  ">es.wikipedia.org/wiki/Bash" # Abrir URL específica
+  "!i cats"                   # Bang imágenes DuckDuckGo (!im)
+  "!dict house"                 # Bang diccionario inglés
+  "!syn stop"                # Bang sinónimos español
+)
+
 BANG_EJEMPLO=${EJEMPLOS_BANG[$RANDOM % ${#EJEMPLOS_BANG[@]}]}
 
 # 🏷️ Título según alias por defecto
@@ -480,25 +584,27 @@ else
   titulo="KWebSearch"
 fi
 
-# 💬 Entrada principal
+# ======💬 Entrada principal======#
 input=$(kdialog --title "$titulo" --inputbox \
-"🟢 Usa !bangs de DuckDuckGo. Ejemplo: $BANG_EJEMPLO  ✏️ Escribe _help para ver más opciones:")
+"¡Explora la web a tu manera! Usa bangs, alias o abre URLs.
+
+🟢 !bang   🔎 alias:consulta   🌐 >url   ✏️ _help   Ej: $BANG_EJEMPLO")
 [[ $? -ne 0 || -z "$input" ]] && exit
 
-# 🎯 Comandos y menú
+#====== 🎯 Comandos y menú======#
 case "$input" in
-  _help)        mostrar_ayuda ;;
-  _alias)       mostrar_alias ;;
-  _edit)        editar_alias ;;
-  _clear)       borrar_historial ;;
-  _default)     establecer_default ;;
-  _history)     ver_historial ;;
-  _prefix)        prefix ;;
-  _resetalias)  restablecer_alias ;;
-  _newalias)  crear_alias ;;
-  _backup)      backup_config ;;
-  _restore)     restore_config ;;
-  _about)     about_info ;;
+  _alias)        mostrar_alias ;;
+  _newalias)     crear_alias ;;
+  _edit)         editar_alias ;;
+  _default)      default_alias ;;
+  _resetalias)   restablecer_alias ;;
+  _history)      ver_historial ;;
+  _clear)        borrar_historial ;;
+  _prefix)       prefix ;;
+  _backup)       backup_config ;;
+  _restore)      restore_config ;;
+  _help)         mostrar_ayuda ;;
+  _about)        about_info ;;
   _menu)
   OPCION=$(kdialog --title "Opciones" --menu "¿Qué deseas hacer?" \
     1 "📘 Seleccionar alias" \
@@ -508,26 +614,28 @@ case "$input" in
     5 "🔄 Restablecer alias por defecto" \
     6 "🕘 Ver historial" \
     7 "🧹 Limpiar historial" \
-    8 "🌐 Establecer símbolo para abrir URL" \
-    9 "📤 Crear backup (configuración e historial)" \
-    10 "📥 Restaurar backup existente" \
-    11 "🧾 Ver ayuda" \
-    12 "ℹ️ Acerca de" \
-    13 "❌ Salir")
+    8 "🌐 Abrir URL" \
+    9 "🔗 Establecer símbolo para abrir URL" \
+    10 "📤 Crear backup (configuración e historial)" \
+    11 "📥 Restaurar backup existente" \
+    12 "🧾 Ver ayuda" \
+    13 "ℹ️ Acerca de" \
+    14 "❌ Salir")
   case "$OPCION" in
     1) mostrar_alias      ;;
     2) crear_alias        ;;
     3) editar_alias       ;;
-    4) establecer_default ;;
+    4) default_alias ;;
     5) restablecer_alias  ;;
     6) ver_historial  ;;
     7)borrar_historial   ;;
-    8) prefix      ;;
-    9) backup_config      ;;
-    10) restore_config     ;;
-    11) mostrar_ayuda      ;;
-    12) about_info      ;;
-    13) exit              ;;
+    8) abrir_url ;;
+    9)prefix      ;;
+    10) backup_config      ;;
+    11) restore_config     ;;
+    12) mostrar_ayuda      ;;
+    13) about_info      ;;
+    14) exit              ;;
   esac
   ;;
 
