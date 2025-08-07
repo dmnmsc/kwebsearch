@@ -1,5 +1,5 @@
 #!/bin/bash
-VERSION="1.4"
+VERSION="1.5"
 
 # ────────────── ☑️ CARGA Y DEPENDENCIAS ──────────────
 
@@ -522,11 +522,9 @@ procesar_busqueda() {
   local input="$1"
 
   # Abrir web directamente si input empieza por cmd_prefix y tiene forma de dominio
-  if [[ "$input" =~ ^$cmd_prefix([a-zA-Z0-9.-]+\.[a-z]{2,})(/.*)?$ ]]; then
-    local site="${BASH_REMATCH[1]}"
-    local path="${BASH_REMATCH[2]}"
-    [[ -z "$path" ]] && path=""
-    abrir_url_directa "${site}${path}"
+  if [[ "$input" =~ ^$cmd_prefix((https?://)?[a-zA-Z0-9.-]+\.[a-z]{2,}.*)$ ]]; then
+    local raw_url="${BASH_REMATCH[1]}"
+    abrir_url_directa "$raw_url"
     exit
   fi
 
@@ -563,15 +561,15 @@ EJEMPLOS_BANG=(
   "!g teclado mecánico"         # Bang Google
   ">github.com"                 # Abrir URL con prefijo >
   "g:kdialog"                   # Alias personalizado (ej. Google)
-  "w:Linux"                    # Alias Wikipedia en español
+  "w:Linux"                     # Alias Wikipedia en español
   "y:python tutorial"           # Alias YouTube
   "a:ratón gamer"               # Alias Amazon
   ".w:computadora"              # Alias Wikipedia en inglés
   "d:programación"              # Alias RAE (Diccionario)
   ">es.wikipedia.org/wiki/Bash" # Abrir URL específica
-  "!i cats"                   # Bang imágenes DuckDuckGo (!im)
+  "!i cats"                     # Bang imágenes DuckDuckGo (!im)
   "!dict house"                 # Bang diccionario inglés
-  "!syn stop"                # Bang sinónimos español
+  "!syn stop"                   # Bang sinónimos español
 )
 
 BANG_EJEMPLO=${EJEMPLOS_BANG[$RANDOM % ${#EJEMPLOS_BANG[@]}]}
@@ -625,16 +623,16 @@ case "$input" in
     1) mostrar_alias      ;;
     2) crear_alias        ;;
     3) editar_alias       ;;
-    4) default_alias ;;
+    4) default_alias      ;;
     5) restablecer_alias  ;;
-    6) ver_historial  ;;
-    7)borrar_historial   ;;
-    8) abrir_url ;;
-    9)prefix      ;;
-    10) backup_config      ;;
-    11) restore_config     ;;
-    12) mostrar_ayuda      ;;
-    13) about_info      ;;
+    6) ver_historial      ;;
+    7) borrar_historial   ;;
+    8) abrir_url          ;;
+    9) prefix             ;;
+    10) backup_config     ;;
+    11) restore_config    ;;
+    12) mostrar_ayuda     ;;
+    13) about_info        ;;
     14) exit              ;;
   esac
   ;;
