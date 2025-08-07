@@ -1,5 +1,10 @@
 # 📦 kwebsearch - Registro de cambios
 
+## v1.5 – 2025-08-07
+
+### 🛠️ Mejoras
+- Mejorada la detección de URLs mediante prefijo.
+
 ## v1.4 – 2025-07-26
 
 ### ✨ Novedades
