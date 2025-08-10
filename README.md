@@ -30,6 +30,16 @@ KWebSearch es un buscador rápido con interfaz gráfica para KDE que usa alias p
 
 
 ---
+## 📸 Capturas de pantalla
+<div align="center">
+  
+| <div align="center"><img src="screenshots/kwebsearch_alias.png" width="200px" /><br /><i>Alias</i></div>  | <div align="center"><img src="screenshots/kwebsearch_bang.png" width="200px" /><br /><i>Bang</i></div>  | <div align="center"><img src="screenshots/kwebsearch_URL.png" width="200px" /><br /><i>URL</i></div>  |
+|:--:|:--:|:--:|
+| <div align="center"><img src="screenshots/kwebsearch_default_DDG_search.png" width="200px" /><br /><i>Default DDG Search</i></div>  | <div align="center"><img src="screenshots/kwebsearch_main_ui.png" width="200px" /><br /><i>Main UI</i></div>  | <div align="center"><img src="screenshots/kwebsearch_backup.png" width="200px" /><br /><i>Backup</i></div>  |
+| <div align="center"><img src="screenshots/kwebsearch_menu.png" width="200px" /><br /><i>Menu</i></div>  | <div align="center"><img src="screenshots/kwebsearch_help.png" width="200px" /><br /><i>Help</i></div>  | <div align="center"><img src="screenshots/kwebsearch_about.png" width="200px" /><br /><i>About</i></div>  |
+
+</div>
+---
 
 ## ⚙️ Características principales
 
