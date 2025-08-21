@@ -4,7 +4,7 @@
 
 # 📘 KWebSearch — Buscador gráfico personalizado para KDE
 
-**Versión:** 1.5  
+**Versión:** 1.6.1  
 **Autor:** dmnmsc  
 **Licencia:** [GNU General Public License v3.0](https://www.gnu.org/licenses/gpl-3.0.html)  
 **Entorno recomendado:** KDE Plasma con kdialog  
@@ -24,7 +24,7 @@ Puedes crear tus propios alias, usar comandos especiales para ver el historial, 
 
 ---
 
-## TL;DR
+## ⚡ TL;DR
 
 KWebSearch es un buscador rápido con interfaz gráfica para KDE que usa alias personalizables, soporta los bangs de DuckDuckGo y permite abrir URLs directamente con un prefijo configurable.
 
@@ -53,7 +53,13 @@ KWebSearch es un buscador rápido con interfaz gráfica para KDE que usa alias p
 - 🧹 Limpieza del historial desde la propia interfaz  
 - 📤 Exportación y respaldo automático de configuración e historial  
 - 📥 Restauración gráfica de copias de seguridad guardadas  
-- 🆕 Comandos especiales como `_about`, `_help`, `_prefix` y más para facilitar el uso  
+- 🆕 Comandos especiales como `_about`, `_help`, `_prefix` y más para facilitar el uso
+- 🖥️ **Modo CLI**: ejecuta búsquedas y abre URLs directamente desde la terminal usando alias o prefijos.  
+  Ejemplo:
+  ```bash
+  kwebsearch '>github.com'        # abre github.com en el navegador
+  kwebsearch 'g:script bash'      # busca en Google usando alias 'g'
+  ```
 
 ---
 
@@ -66,6 +72,29 @@ chmod +x kwebsearch.sh
 ./kwebsearch.sh
 ```
  📝 El script creará automáticamente el archivo `kwebsearch.conf` con todos los alias por defecto.
+
+---
+
+## ⚙️ Dependencias
+
+Antes de ejecutar `kwebsearch.sh`, asegúrate de tener instaladas las siguientes herramientas:
+
+- `kdialog`  
+- `grep`, `sed`, `cut`, `bash`, `xdg-open` (normalmente ya vienen con tu distribución)
+
+### Debian / Ubuntu
+
+```bash
+sudo apt update
+sudo apt install kdialog xdg-utils
+```
+
+### Arch Linux / Manjaro
+
+```bash
+sudo pacman -Syu
+sudo pacman -S kdialog xdg-utils
+```
 
 ---
 
