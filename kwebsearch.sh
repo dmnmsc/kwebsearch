@@ -1,5 +1,5 @@
 #!/bin/bash
-VERSION="1.5"
+VERSION="1.6"
 
 # ────────────── ☑️ CARGA Y DEPENDENCIAS ──────────────
 
@@ -53,15 +53,37 @@ EOF
   kdialog --msgbox "✅ Archivo de alias creado en:\n$CONF"
 fi
 
-# ======📥 Cargar configuraciones dinámicas del archivo======#
+# ====== ⚡ Modo CLI======#
+if [[ -n "$1" ]]; then
+    ARG="$1"
+
+    if [[ "$ARG" =~ ^([a-zA-Z0-9_.@,+-]+):(.*) ]]; then
+        KEY="${BASH_REMATCH[1]}"
+        QUERY="${BASH_REMATCH[2]}"
+    else
+        KEY=""
+        QUERY="$ARG"
+    fi
+
+    # Leer línea correspondiente sin source
+    CONF_LINE=$(grep -E "^${KEY}\)" "$CONF" 2>/dev/null)
+
+    if [[ -n "$CONF_LINE" ]]; then
+        # Extraer comando
+        COMMAND=$(echo "$CONF_LINE" | sed -E 's/^[^)]*\)[[:space:]]*(.*);;#.*$/\1/')
+        # Reemplazar $query
+        QUERY_ESCAPED=$(printf '%q' "$QUERY")
+        eval "${COMMAND//\$query/$QUERY_ESCAPED}"
+    else
+        # DuckDuckGo por defecto
+        xdg-open "https://duckduckgo.com/?q=$(echo "$QUERY" | sed 's/ /+/g')"
+    fi
+    exit
+fi
+
+# ────────────── 📤CARGAR CONFIG PARA GUI ──────────────
 source "$CONF"
-
-# ======🧠 Alias por defecto======#
 DEFAULT_ALIAS=$(grep -E '^default_alias=' "$CONF" | cut -d= -f2 | tr -d '"')
-
-  #######################
-  #====== 🔧 Funciones=======#
-  #######################
 
 # ────────────── 🧠 GESTIÓN DE ALIAS ──────────────
 
