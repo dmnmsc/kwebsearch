@@ -1,5 +1,5 @@
 #!/bin/bash
-VERSION="1.6"
+VERSION="1.6.1"
 
 # ────────────── ☑️ CARGA Y DEPENDENCIAS ──────────────
 
@@ -53,10 +53,26 @@ EOF
   kdialog --msgbox "✅ Archivo de alias creado en:\n$CONF"
 fi
 
-# ====== ⚡ Modo CLI======#
+# ====== ⚡ Modo CLI ======#
 if [[ -n "$1" ]]; then
     ARG="$1"
 
+    # Leer solo cmd_prefix y default_alias del conf
+    cmd_prefix=$(grep -E '^cmd_prefix=' "$CONF" | cut -d= -f2 | tr -d '"')
+    DEFAULT_ALIAS=$(grep -E '^default_alias=' "$CONF" | cut -d= -f2 | tr -d '"')
+
+    # Escapar prefijo para regex
+    PREFIX_ESCAPED=$(printf '%s\n' "$cmd_prefix" | sed 's/[][\\.^$*+?(){}|]/\\&/g')
+
+    # 1️⃣ Detectar URL directa con prefijo
+    if [[ "$ARG" =~ ^$PREFIX_ESCAPED((https?://)?[a-zA-Z0-9.-]+\.[a-z]{2,}.*)$ ]]; then
+        RAW_URL="${BASH_REMATCH[1]}"
+        [[ ! "$RAW_URL" =~ ^https?:// ]] && RAW_URL="https://$RAW_URL"
+        xdg-open "$RAW_URL"
+        exit
+    fi
+
+    # 2️⃣ Detectar alias:consulta
     if [[ "$ARG" =~ ^([a-zA-Z0-9_.@,+-]+):(.*) ]]; then
         KEY="${BASH_REMATCH[1]}"
         QUERY="${BASH_REMATCH[2]}"
@@ -65,19 +81,26 @@ if [[ -n "$1" ]]; then
         QUERY="$ARG"
     fi
 
-    # Leer línea correspondiente sin source
-    CONF_LINE=$(grep -E "^${KEY}\)" "$CONF" 2>/dev/null)
+    # 3️⃣ Determinar comando a ejecutar
+    if [[ -n "$KEY" ]]; then
+        CONF_LINE=$(grep -E "^${KEY}\)" "$CONF" 2>/dev/null)
+    fi
 
+    # 4️⃣ Fallback a DEFAULT_ALIAS si KEY no existe
+    if [[ -z "$CONF_LINE" && -n "$DEFAULT_ALIAS" ]]; then
+        CONF_LINE=$(grep -E "^${DEFAULT_ALIAS}\)" "$CONF" 2>/dev/null)
+        QUERY="$ARG"  # pasar toda la entrada como consulta
+    fi
+
+    # 5️⃣ Ejecutar comando o fallback DuckDuckGo
     if [[ -n "$CONF_LINE" ]]; then
-        # Extraer comando
         COMMAND=$(echo "$CONF_LINE" | sed -E 's/^[^)]*\)[[:space:]]*(.*);;#.*$/\1/')
-        # Reemplazar $query
         QUERY_ESCAPED=$(printf '%q' "$QUERY")
         eval "${COMMAND//\$query/$QUERY_ESCAPED}"
     else
-        # DuckDuckGo por defecto
         xdg-open "https://duckduckgo.com/?q=$(echo "$QUERY" | sed 's/ /+/g')"
     fi
+
     exit
 fi
 
