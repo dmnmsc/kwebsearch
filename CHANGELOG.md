@@ -1,5 +1,23 @@
 # 📦 kwebsearch - Registro de cambios
 
+## v1.6.1 – 2025-08-21
+
+### 🛠️ Mejoras
+- **Modo CLI mejorado**: el prefijo para abrir URLs directamente (`>`, `~`, etc.) funciona correctamente en la terminal.
+```bash
+kwebsearch '>github.com'
+```
+- **Fallback más inteligente**: si se usa un alias inexistente, se recurre automáticamente al `DEFAULT_ALIAS` antes de abrir DuckDuckGo.
+
+## v1.6 – 2025-08-21
+
+## ✨ Novedades
+- **Modo CLI**: ahora puedes buscar usando tus `alias` o  `bangs` directamente desde la terminal (DuckDuckGo por defecto).  
+
+```bash
+kwebsearch 'tu búsqueda'
+```
+
 ## v1.5 – 2025-08-07
 
 ### 🛠️ Mejoras
